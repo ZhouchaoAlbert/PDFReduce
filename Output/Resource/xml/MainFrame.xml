@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Window  size="800,600"  caption="0,0,0,40" mininfo="300,400" sizebox="4,4,4,4" roundcorner="2,2,2,2" showshadow="true" shadowimage="material/shadow.png" shadowcorner="7,7,7,7">
+	<Font name="微软雅黑" size="12" bold="false" default="true" />
+	<Font name="微软雅黑" size="11" bold="false" />
+	<Font name="微软雅黑" size="14" bold="false" />
+	<Font name="微软雅黑" size="16" bold="false" />
+	<Font name="微软雅黑" size="12" underline="true"/>
+	<Default name="VScrollBar" value="showbutton1=&quot;false&quot; showbutton2=&quot;false&quot; width=&quot;7&quot; thumbnormalimage=&quot;file='material/scrollbar.png' source='14,0,21,39' corner='2,10,2,10'&quot; thumbhotimage=&quot;file='material/scrollbar.png' source='21,0,28,39' corner='2,10,2,10'&quot; thumbpushedimage=&quot;file='material/scrollbar.png' source='21,0,28,39' corner='2,10,2,10'&quot; bknormalimage=&quot;file='material/scrollbar.png' source='0,0,7,39' corner='2,10,2,10'&quot; bkhotimage=&quot;file='material/scrollbar.png' source='7,0,14,39' corner='2,10,2,10'&quot; bkpushedimage=&quot;file='material/scrollbar.png' source='7,0,14,39' corner='2,10,2,10'&quot;" />
+	<Default name="Edit" value="normalimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,0,107,30'&quot; hotimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,31,107,61'&quot; pushedimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,62,116,92'&quot; focusedimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,62,116,92'&quot;"/>
+
+	<VerticalLayout bkcolor="#FFFFFFFF">
+		<!--标题栏-->
+		<HorizontalLayout height ="40" bkcolor="#FFF5F5F5">
+			<Label text="悦书PDF软件" textpadding="14,0,0,0" textcolor="#FF4C4C4C" font="2" autocalcwidth="true"  tooltip="悦书PDF软件"/>
+			<Control />
+			<Button name="btn_close"  keyboard="false"  width="38" height="38" normalimage="material/sys_close_normal.png" hotimage="material/sys_close_hot.png" pushedimage="material/sys_close_hot.png"  />
+			<Control width="10"/>
+		</HorizontalLayout>
+		<!--分割条-->
+		<Label name="Separator_line" height="2" bkcolor="#FFE5E5E5"/>
+			
+		<HorizontalLayout>
+			<!--左边Tab选择栏-->
+			<VerticalLayout  width="128" bkcolor="#FFFAFAFA">
+				
+				<HorizontalLayout height="32">
+					<Option name="opt_pdf_reduce" text="PDF体积压缩" textpadding="20,0,0,0" align="left" valign="vcenter" selected="true" group="tab_header" textcolor="#FF000000" hottextcolor="#FF000000" selectedtextcolor="#FFFFFFFF" bkcolor="#FFFAFAFA" hotbkcolor="FFF2F2F2" selectedbkcolor="#FF0FC88D"/>
+				</HorizontalLayout>
+			
+				<HorizontalLayout height="32">
+					<Option name="opt_pic_convert" text="图片转换" textpadding="20,0,0,0" align="left" valign="vcenter"  group="tab_header" textcolor="#FF000000" hottextcolor="#FF000000" selectedtextcolor="#FFFFFFFF" bkcolor="#FFFAFAFA" hotbkcolor="FFF2F2F2" selectedbkcolor="#FF0FC88D"/>
+				</HorizontalLayout>
+				
+				<HorizontalLayout height="32">
+					<Option name="opt_pdf_author" text="软件作者" textpadding="20,0,0,0" align="left" valign="vcenter" group="tab_header" textcolor="#FF000000" hottextcolor="#FF000000" selectedtextcolor="#FFFFFFFF" bkcolor="#FFFAFAFA" hotbkcolor="FFF2F2F2" selectedbkcolor="#FF0FC88D"/>
+				</HorizontalLayout>
+			</VerticalLayout>
+			<!--分割条-->
+			<Label width="1" bkcolor="#FFE5E5E5"/>
+			<!--右边设置树-->
+			<TabLayout name="tab_tree_list">
+				<VerticalLayout name="ver_reduce_layout" inset="35,10,25,0" vscrollbar="true">
+			
+					<VerticalLayout >
+						<Label text="输入PDF路径:" height="30" align="left" valign="top" textpadding="0,1,0,0"/>
+						<Control height="10" />
+						<Edit name="edt_pdf_in_path" height="30" padding="30,0,0,0" />
+						<Control height="10" />
+						<HorizontalLayout height="30" padding="30,0,0,0">
+							<Control  />
+						    <Button name="btn_open_pdf_path" text="浏览" width="100" textcolor="#FFFFFFFF" normalimage="file='material/button.png' corner='5,5,5,5' source='0,0,80,36'" hotimage="file='material/button.png' corner='5,5,5,5' source='0,36,80,72'" pushedimage="file='material/button.png' corner='5,5,5,5' source='0,72,80,108'" />
+						</HorizontalLayout>
+						<Control height="10" />
+						
+						<Label text="输出PDF路径:" height="30" align="left" valign="top" textpadding="0,1,0,0"/>
+						<Control height="10" />
+						<Edit name="edt_pdf_out_path" height="30" padding="30,0,0,0" />
+						
+						<Control height="20" />
+						
+						<HorizontalLayout height="30" padding="30,0,0,0">
+						<Control  />
+						<Button name="btn_open_pdf_compress" text="开始PDF压缩" width="100" textcolor="#FFFFFFFF" normalimage="file='material/button.png' corner='5,5,5,5' source='0,0,80,36'" hotimage="file='material/button.png' corner='5,5,5,5' source='0,36,80,72'" pushedimage="file='material/button.png' corner='5,5,5,5' source='0,72,80,108'" />
+						</HorizontalLayout>		
+					</VerticalLayout>
+				</VerticalLayout>
+				
+				<VerticalLayout name="ver_pic_layout" inset="35,20,25,0" vscrollbar="true">
+					<VerticalLayout >
+						<Label text="输入图片路径:" height="30" align="left" valign="top" textpadding="0,1,0,0"/>
+						<Control height="10" />
+						<Edit name="edt_pic_in_path" height="30" padding="30,0,0,0" />
+						<Control height="10" />
+				
+						<Label text="输出图片路径:" height="30" align="left" valign="top" textpadding="0,1,0,0"/>
+						<Control height="10" />
+						<Edit name="edt_pic_out_path" height="30" padding="30,0,0,0" />
+
+						<Control height="20" />
+						<HorizontalLayout height="30" padding="30,0,0,0">
+						<Control  />
+						<Button name="btn_start_pic_convert" text="开始图片转换" width="100" textcolor="#FFFFFFFF" normalimage="file='material/button.png' corner='5,5,5,5' source='0,0,80,36'" hotimage="file='material/button.png' corner='5,5,5,5' source='0,36,80,72'" pushedimage="file='material/button.png' corner='5,5,5,5' source='0,72,80,108'" />
+						</HorizontalLayout>		
+					</VerticalLayout>	
+				</VerticalLayout>
+				
+				<VerticalLayout name="ver_author_layout" inset="35,20,25,0" vscrollbar="true">
+					<VerticalLayout >
+						<Label text="O(∩_∩)O~" align="left" valign="top" padding="0,0,0,12"/>
+					
+					</VerticalLayout>
+				</VerticalLayout>
+			</TabLayout>
+		</HorizontalLayout>
+  </VerticalLayout>
+</Window>

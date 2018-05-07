@@ -25,7 +25,8 @@ public:// UI初始化
 	
 	//启动PDF压缩
 	void StartPDFCompress();
-
+	//开始图片转换
+	void StartPicConvert();
    //选择打开PDF路径
 	void SelectPDFFolderDialog();
 private:

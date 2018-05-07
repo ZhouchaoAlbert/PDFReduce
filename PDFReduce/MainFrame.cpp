@@ -2,8 +2,8 @@
 #include <atlstr.h>
 #include <ShlObj.h>
 #include <string>
-
-#include "ximage.h"   
+  
+#include "UtilImage.h"
 
 CMainFrame::CMainFrame()
 {
@@ -79,13 +79,21 @@ void CMainFrame::Notify(TNotifyUI& msg)
 		{
 			m_pTreeList->SelectItem(0);
 		}
-		else if (szName == _T("opt_pdf_author"))  //select pdf author
+		else if (szName == _T("opt_pic_convert"))  //select pic convert
 		{
 			m_pTreeList->SelectItem(1);
+		}
+		else if (szName == _T("opt_pdf_author"))  //select pdf author
+		{
+			m_pTreeList->SelectItem(2);
 		}	
 		else if (szName == _T("btn_open_pdf_compress"))  //启动PDF体积压缩
 		{
 			StartPDFCompress();
+		}
+		else if (szName == _T("btn_start_pic_convert"))  //开始图片转换
+		{
+			StartPicConvert();
 		}
 		else if (szName == _T("btn_open_pdf_path"))  //选择打开PDF路径框
 		{
@@ -109,16 +117,11 @@ BOOL IsFileExist(const CString& csFile)
 	return INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-#include "UtilImage.h"
+
 
 void CMainFrame::StartPDFCompress()
 {
 
-	CxImage image;
-	CString  imageName = _T("C:\\Users\\C\\Desktop\\PDFReduce\\77777.tif");
-	CString  imageSave = _T("C:\\Users\\C\\Desktop\\PDFReduce\\222222.jpg");
-	Util::Image::ConvertType(imageName, imageSave);
-	return;
 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
 	ATL::CString strPDFPath = pEdit->GetText();
 	if (strPDFPath.IsEmpty())
@@ -145,6 +148,33 @@ void CMainFrame::StartPDFCompress()
 
 }
 
+
+void CMainFrame::StartPicConvert()
+{
+
+	CEditUI* pEditIn = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pic_in_path")));
+	ATL::CString strPicPath = pEditIn->GetText();
+	if (strPicPath.IsEmpty())
+	{
+		::MessageBox(m_hWnd, _T("输入图片路径为空,请输入图片路径!"), _T("提示"), MB_OK);
+		return;
+	}
+
+	if (!IsFileExist(strPicPath))
+	{
+		::MessageBox(m_hWnd, _T("输入图片路径不存在，请重新输入!"), _T("提示"), MB_OK);
+		return;
+	}
+
+	CEditUI* pEditOut = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pic_out_path")));
+	ATL::CString strPicOutPath = pEditOut->GetText();
+	if (strPicOutPath.IsEmpty())
+	{
+		::MessageBox(m_hWnd, _T("输出图片路径为空,请输入输出图片路径!"), _T("提示"), MB_OK);
+		return;
+	}
+	Util::Image::ConvertType(strPicPath, strPicOutPath);
+}
 
 void CMainFrame::SelectPDFFolderDialog()
 {

@@ -38,7 +38,7 @@ BOOL Util::Image::ConvertType(LPCTSTR szImagePathIn, LPCTSTR szImagePathOut, UIN
 
 	//3Í¼Æ¬×ª»»
 	CxImage image;
-	image.SetJpegScale(8);
+	image.SetJpegScale(50);
 	image.Load((const TCHAR*)szImagePathIn, nTypeIn);
 	if (!image.IsValid()) 
 	{
