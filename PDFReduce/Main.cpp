@@ -24,11 +24,10 @@ ATL::CString GetResFolder()
 	return _T("");
 }
 
-#include "UtilMuPdf.h"
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int nCmdShow)
 {
-	Util::MuPdf::Init(_T("E:\\test\\test.PDF"));
+	
 	// COM
 	HRESULT Hr = ::CoInitialize(NULL);
 	if (FAILED(Hr)) return 0;

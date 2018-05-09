@@ -4,6 +4,7 @@
 #include <string>
   
 #include "UtilImage.h"
+#include "UtilMuPdf.h"
 
 CMainFrame::CMainFrame()
 {
@@ -126,7 +127,7 @@ void CMainFrame::StartPDFCompress()
 	ATL::CString strPDFPath = pEdit->GetText();
 	if (strPDFPath.IsEmpty())
 	{
-		::MessageBox(m_hWnd, _T("输入PDF路径为空,请输入PDF路径!"), _T("提示"),MB_OK);
+		::MessageBox(m_hWnd, _T("输入PDF路径为空,请输入PDF路径!"), _T("提示"), MB_OK);
 		return;
 	}
 
@@ -137,13 +138,26 @@ void CMainFrame::StartPDFCompress()
 	}
 
 	CString strExe = strPDFPath.Right(4);
-	if ( 0 != strExe.CompareNoCase(_T(".pdf")))
+	if (0 != strExe.CompareNoCase(_T(".pdf")))
 	{
 		::MessageBox(m_hWnd, _T("输入的不是PDF文件，请重新输入!"), _T("提示"), MB_OK);
 		return;
 	}
+
+// 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
+// 	ATL::CString strPDFOutPath = pEdit->GetText();
+// 	CString strExeOut = strPDFOutPath.Right(4);
+// 	if (0 != strExeOut.CompareNoCase(_T(".pdf")))
+// 	{
+// 		::MessageBox(m_hWnd, _T("输出的不是PDF文件，请重新输入!"), _T("提示"), MB_OK);
+// 		return;
+// 	}
 	
 	//对PDF 压缩体积处理
+	if (Util::MuPdf::Init(strPDFPath))
+	{
+		Util::MuPdf::PraseResImage("E:\\test\\convert");
+	}
 
 
 }

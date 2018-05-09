@@ -37,8 +37,6 @@ BOOL Util::MuPdf::Init(ATL::CString strPdfPath, ATL::CString strPassword)
 		return FALSE;
 	}
 
-	//Test
-	PraseResImage("E:\\test\\convert");
 	return TRUE;
 }
 
@@ -113,7 +111,7 @@ BOOL Util::MuPdf::SaveImage(std::string szSavePath, INT32 nNum)
 	return bRet;
 }
 
-void StrToHex(const char*pbSrc, int nLen)
+CString  StrToHex(const char*pbSrc, int nLen)
 {
 	CString strTest;
 	char h1, h2;
@@ -133,6 +131,7 @@ void StrToHex(const char*pbSrc, int nLen)
 			s2 -= 7;
 		strTest.AppendFormat(_T("%0xd"), s1 * 16 + s2);
 	}
+	return strTest;
 }
 
 //解析资源信息
@@ -152,6 +151,11 @@ void Util::MuPdf::PraseResImage(std::string szSavePath)
 			{
 				if (ImageConvert(szSavePath, uIndex))
 					WriteDataToStream(obj,szSavePath, uIndex);
+
+				DeleteFileA(os.str().c_str());
+				std::stringstream os2;
+				os2 << szSavePath << "\\img-" << uIndex << ".jpg";
+				DeleteFileA(os2.str().c_str());
 			}
 #endif
 		}
@@ -161,6 +165,15 @@ void Util::MuPdf::PraseResImage(std::string szSavePath)
 	os << szSavePath << "\\out.pdf";
 	std::string strOutPath = os.str();
 	pdf_write_document(doc, (char*)strOutPath.c_str(), nullptr);
+
+
+	//
+	if (doc)
+	{
+		pdf_close_document(doc);
+		doc = NULL;
+		fz_free_context(ctx);
+	}
 
 }
 
@@ -183,6 +196,7 @@ BOOL Util::MuPdf::ImageConvert(std::string szSavePath, INT32 nNum)
 	ATL::CA2W strImageOutPath(osout.str().c_str(), CP_ACP);
 
 	bRet = Util::Image::ConvertType(strSrcImagePath, strImageOutPath);
+
 	return bRet;
 }
 
@@ -192,30 +206,39 @@ BOOL Util::MuPdf::ImageConvert(std::string szSavePath, INT32 nNum)
 
 BOOL  Util::MuPdf::WriteDataToStream(pdf_obj* obj, std::string szSavePath, INT32 nNum)
 {
-	//更新流信息  Test
-
 	//图片路径
 	std::stringstream osout;
 	osout << szSavePath << "\\img-" << nNum << ".jpg";
-	
+
 	std::ifstream fin(osout.str().c_str(), std::ios::binary);
 	fin.seekg(0, std::ios::end);
 	UINT32 uSize = fin.tellg();
-	UINT8* szBuf = new (std::nothrow)UINT8[uSize];
-
+	UINT8* szBuf = new (std::nothrow)UINT8[uSize + 1];
+	memset(szBuf, 0, sizeof(szBuf));
 	fin.seekg(0, std::ios::beg);
 	fin.read((char*)szBuf, sizeof(char) * uSize);
 	fin.close();
-
+#if 0
 	UINT32 uDestLen = uSize;
 	UINT8* buffer_dest = new (std::nothrow)UINT8[uSize];
-
 	compress(buffer_dest, (uLong*)&uDestLen, szBuf, uSize);
+#endif
 
-	fz_buffer * stm_buf = fz_new_buffer(ctx, (int)uDestLen);
-	memcpy(stm_buf->data, buffer_dest, uDestLen);
-	stm_buf->len = uDestLen;
+	fz_buffer * stm_buf = fz_new_buffer(ctx, (int)uSize);
+	memcpy(stm_buf->data, szBuf, uSize);
+	stm_buf->len = uSize;
 
+#if 0
+	CStringA strTest;
+	for (UINT32 i = 0; i < uSize; i++)
+	{
+		strTest.AppendFormat("%02X", szBuf[i]);
+	}
+	FILE* fp;
+	fp = fopen("E:\\test\\1111.txt", "wb");
+	fwrite(strTest, strTest.GetLength(), 1, fp);
+	fclose(fp);
+#endif
 
 	//更新长度
 	pdf_obj *type = pdf_dict_gets(obj, "Length");
@@ -224,88 +247,23 @@ BOOL  Util::MuPdf::WriteDataToStream(pdf_obj* obj, std::string szSavePath, INT32
 		int num = pdf_to_num(type);
 		int gen = pdf_to_gen(type);
 		pdf_obj* lenobj = pdf_load_object(doc, num, gen);
-		pdf_set_int(lenobj, uDestLen);
+		pdf_set_int(lenobj, uSize);
 		pdf_update_object(doc, num, lenobj);
 	}
 	else if (pdf_is_int(obj))
 	{
-		int i = pdf_to_num(obj);
+		pdf_set_int(type, uSize);
 	}
+	pdf_dict_dels(obj, "Filter");
+	pdf_dict_puts_drop(obj, "Filter", pdf_new_name(doc, "DCTDecode"));
 
-	//pdf_dict_puts_drop(obj, "Length", pdf_new_int(doc, udstLength));
 	//更新流
 	pdf_update_stream(doc, nNum, stm_buf);
 
-	delete[] buffer_dest;
+	//delete[] buffer_dest;
 	delete[]  szBuf;
 
-	
-
-	//pdf_is_name(type) && !strcmp(pdf_to_name(type), "Image");
-
-
-	return FALSE;
+	return TRUE;
 }
 
 
-#if 0
-
-unsigned long udstLength = 1024, usrcLength = 1024;
-unsigned char *buffer_src = (unsigned char*)malloc(1024);
-unsigned char *buffer_dest = (unsigned char*)malloc(1024);
-memset(buffer_src, 0, 1024);
-memset(buffer_dest, 0, 1024);
-unsigned char buffer[] = "123456789asdfghjklzxcvb 你好伟创！ ";
-usrcLength = strlen((char*)buffer);
-ScopedMem<char> annot_apc_dict(str::Format(ap_dictFilter, usrcLength));
-memcpy(buffer_src, buffer, usrcLength);
-//调用 zlib 的 compress 对注释信息压缩（ FlateDecode 压缩,udstLength 必须传入一个比较大的整数）
-//usrcLength:源数据长度
-//buffer_src:源数据
-//UdstLength:目标数据长度
-//buffer_dest:目标数据
-compress(buffer_dest, &udstLength, buffer_src, usrcLength);
-//创建一个<</Filter/FlateDecode>>类型的 pdf 对象
-pdf_obj * apc_obj = pdf_new_obj_from_str(doc, annot_apc_dict);
-//申请一个 fz_buffer*类型的内存空间， 用来保存上面压缩的批注信息
-fz_buffer * apc_buf = fz_new_buffer(ctx, (int)udstLength);
-memcpy(apc_buf->data, buffer_dest, udstLength);
-apc_buf->len = udstLength;
-
-pdf_dict_puts_drop(apc_obj, "Length", pdf_new_int(doc, apc_buf->len)); 	//指定<</Filter/FlateDecode>>对象中 Length 的大小
-int num0 = pdf_create_object(doc); 	//创建一个空对象（ 19 0 obj....endobj）， 返回对象序号
-pdf_update_object(doc, num0, apc_obj); 	//将<</Filter/FlateDecode/Length 42>>写入 19 0 obj 的 value 部分
-
-pdf_update_stream(doc, num0, apc_buf); 	//编码后的数据写入 stream...endstream
-
-pdf_dict_puts_drop(annot_obj, "Contents", pdf_new_indirect(doc, num0, 0));//将对象（ 19 0 obj） 与（ 17 0 obj） 关联（ /Contents 19 0 R）
-
-#endif
-
-#if  0
-std::string strpath = "c1111.txt";
-
-std::ifstream fin(strpath.c_str(), std::ios::binary);
-fin.seekg(0, std::ios::end);
-int iSize = fin.tellg();
-char* szBuf = new (std::nothrow) char[iSize];
-
-fin.seekg(0, std::ios::beg);
-fin.read(szBuf, sizeof(char) * iSize);
-fin.close();
-//CxMemFile memfile((BYTE*)szBuf, iSize);
-
-pdf_xref_entry *entry = pdf_get_xref_entry(doc, uIndex);
-// 			fz_compressed_buffer *f_com_buffer = pdf_load_compressed_stream(doc, uIndex, entry->gen);
-// 
-// 
-fz_stream * pdf_stm = pdf_open_stream(doc, uIndex, entry->gen);
-int count, n;
-
-//StrToHex((const char*)pdf_stm->rp, strlen((char*)pdf_stm->rp));
-// 
-// 			std::string strbuf((const char*)f_com_buffer->buffer->data, f_com_buffer->buffer->len);
-// 			
-//	StrToHex((const char*)f_com_buffer->buffer->data, f_com_buffer->buffer->len);
-
-#endif
