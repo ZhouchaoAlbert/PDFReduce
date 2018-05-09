@@ -54,9 +54,10 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;DEBUG=1;USE_OUTPUT_DEBUG_STRING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\Include;..\DirectUI;..\Include\mupdf;..\Include\cximage;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Include\;..\DirectUI\;..\Include\include\;..\Include\include\mupdf\;..\Include\cximage\;..\Include\thirdparty\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -64,7 +65,8 @@
       <AdditionalLibraryDirectories>..\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\Lib\$(TargetName).lib</ImportLibrary>
       <ProgramDatabaseFile>..\Output\PdbD\$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>libmupdf.lib;DuiLibD.lib;./cximage/dLib/cximage.lib;./cximage/dLib/cximagecrtd.lib;./cximage/dLib/jasper.lib;./cximage/dLib/jbig.lib;./cximage/dLib/jpeg.lib;./cximage/dLib/libdcr.lib;./cximage/dLib/libpsd.lib;./cximage/dLib/mng.lib;./cximage/dLib/png.lib;./cximage/dLib/tiff.lib;./cximage/dLib/zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libthirdpartyD.lib;libmupdfD.lib;DuiLibD.lib;./cximage/dLib/cximage.lib;./cximage/dLib/cximagecrtd.lib;./cximage/dLib/jasper.lib;./cximage/dLib/jbig.lib;./cximage/dLib/jpeg.lib;./cximage/dLib/libdcr.lib;./cximage/dLib/libpsd.lib;./cximage/dLib/mng.lib;./cximage/dLib/png.lib;./cximage/dLib/tiff.lib;./cximage/dLib/zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -77,7 +79,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\Include;..\DirectUI;..\Include\mupdf;..\Include\cximage;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Include;..\DirectUI;..\Include\include\;..\Include\include\mupdf\;..\Include\cximage;Include\thirdparty\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,10 +96,12 @@
     <ClCompile Include="UtilImage.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainFrame.cpp" />
+    <ClCompile Include="UtilMuPdf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UtilImage.h" />
     <ClInclude Include="MainFrame.h" />
+    <ClInclude Include="UtilMuPdf.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
