@@ -36,6 +36,9 @@
     <ClCompile Include="UtilMuPdf.cpp">
       <Filter>头文件\Mupdf</Filter>
     </ClCompile>
+    <ClCompile Include="PdfCompress.cpp">
+      <Filter>头文件\Mupdf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h">
@@ -45,6 +48,9 @@
       <Filter>头文件\Ximage</Filter>
     </ClInclude>
     <ClInclude Include="UtilMuPdf.h">
+      <Filter>头文件\Mupdf</Filter>
+    </ClInclude>
+    <ClInclude Include="PdfCompress.h">
       <Filter>头文件\Mupdf</Filter>
     </ClInclude>
   </ItemGroup>

@@ -154,12 +154,8 @@ void CMainFrame::StartPDFCompress()
 // 	}
 	
 	//对PDF 压缩体积处理
-	if (Util::MuPdf::Init(strPDFPath))
-	{
-		Util::MuPdf::PraseResImage("E:\\test\\convert");
-	}
 
-
+	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), _T("E:\\test\\convert"));
 }
 
 
