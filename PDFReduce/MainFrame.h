@@ -31,6 +31,6 @@ public:// UI≥ı ºªØ
 	void SelectPDFFolderDialog();
 private:
 	CTabLayoutUI* m_pTreeList;
-
+	HICON         m_hIcon;
 };
 

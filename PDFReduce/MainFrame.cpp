@@ -5,6 +5,7 @@
   
 #include "UtilImage.h"
 #include "UtilMuPdf.h"
+#include "resource.h"
 
 CMainFrame::CMainFrame()
 {
@@ -39,6 +40,9 @@ CControlUI* CMainFrame::CreateControl(LPCTSTR pstrClass)
 
 void CMainFrame::InitWindow()
 {
+	m_hIcon = LoadIcon(CPaintManagerUI::GetInstance(), MAKEINTRESOURCE(IDI_ICON1));
+	SetIcon(m_hIcon, TRUE);
+	SetIcon(m_hIcon, FALSE);
 	m_pTreeList = static_cast<CTabLayoutUI*>(m_PaintManager.FindControl(_T("tab_tree_list")));
 
 }

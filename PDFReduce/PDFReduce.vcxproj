@@ -102,9 +102,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PdfCompress.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="UtilImage.h" />
     <ClInclude Include="MainFrame.h" />
     <ClInclude Include="UtilMuPdf.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PDFReduce.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="PDF.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
