@@ -78,7 +78,8 @@ void CMainFrame::Notify(TNotifyUI& msg)
 		else if (szName == _T("btn_close"))
 		{
 			ShowWindow(false);
-			Close();
+			PostQuitMessage(0);
+		
 		}
 		else if (szName == _T("opt_pdf_reduce"))  //select pdf reduce
 		{

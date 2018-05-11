@@ -1,6 +1,6 @@
 #include "PdfCompress.h"
 #include <sstream>  
-#include "zlib.h"
+
 #include <io.h>
 #include <fstream>
 #include<iostream>
