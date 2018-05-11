@@ -2,16 +2,14 @@
 #include "ximage.h"
 
 
-LPTSTR Util::Image::FindExtension(LPCTSTR szExeName)
+ATL::CString Util::Image::FindExtension(ATL::CString strExeName)
 {
-	int nLen = _tcslen(szExeName);
-	int i;
-	for (i = nLen - 1; i >= 0; i--){
-		if (szExeName[i] == '.'){
-			return (TCHAR*)(szExeName + i + 1);
-		}
+	INT32 nFind = strExeName.ReverseFind('.');
+	if (nFind < 0)
+	{
+		return _T("");
 	}
-	return (LPTSTR)(szExeName + nLen);
+	return strExeName.Right(strExeName.GetLength() - nFind-1);
 }
 
 
@@ -49,20 +47,19 @@ void DoSplitTiff(LPCTSTR strImagePath, LPCTSTR szSavePath)
 		image.Save(strSavePath, CXIMAGE_FORMAT_TIF);
 	}
 }
-BOOL Util::Image::ConvertType(LPCTSTR szImagePathIn, LPCTSTR szImagePathOut, UINT32 bQuality/* = 50*/)
+BOOL Util::Image::ConvertType(ATL::CString strImagePathIn, ATL::CString  strImagePathOut, UINT32 bQuality/* = 50*/)
 {
 	//1.判断类型 
-	TCHAR* szExtIn = FindExtension(szImagePathIn);
-	_tcslwr(szExtIn);
-	INT32 nTypeIn = CxImage::GetTypeIdFromName(szExtIn);
+	ATL::CString strExtIn = FindExtension(strImagePathIn);
+
+	INT32 nTypeIn = CxImage::GetTypeIdFromName(strExtIn);
 	if (nTypeIn == CXIMAGE_FORMAT_UNKNOWN) {
 		MessageBox(NULL, _T("输入的图片格式不对,请重新输入!"), _T("提示"), MB_OK);
 		return FALSE;
 	}
 
-	TCHAR* szExtOut = FindExtension(szImagePathOut);
-	_tcslwr(szExtOut);
-	INT32 nTypeOut = CxImage::GetTypeIdFromName(szExtOut);
+	ATL::CString strExtOut = FindExtension(strImagePathOut);
+	INT32 nTypeOut = CxImage::GetTypeIdFromName(strExtOut);
 	if (nTypeOut == CXIMAGE_FORMAT_UNKNOWN) {
 		MessageBox(NULL, _T("输出的图片格式不对,请重新输入!"), _T("提示"), MB_OK);
 		return FALSE;
@@ -78,7 +75,7 @@ BOOL Util::Image::ConvertType(LPCTSTR szImagePathIn, LPCTSTR szImagePathOut, UIN
 	//3图片转换
 	CxImage image;
 
-	image.Load((const TCHAR*)szImagePathIn, nTypeIn);
+	image.Load(strImagePathIn.GetString(), nTypeIn);
 	
 	if (!image.IsValid()) 
 	{
@@ -87,6 +84,6 @@ BOOL Util::Image::ConvertType(LPCTSTR szImagePathIn, LPCTSTR szImagePathOut, UIN
 	}
 	
 	image.SetJpegQuality(bQuality);
-	image.Save((const TCHAR*)szImagePathOut, nTypeOut);
+	image.Save(strImagePathOut.GetString(), nTypeOut);
 	return TRUE;
 }

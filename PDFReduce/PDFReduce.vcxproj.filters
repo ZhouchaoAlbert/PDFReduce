@@ -22,6 +22,9 @@
     <Filter Include="头文件\Mupdf">
       <UniqueIdentifier>{f55ce26d-3c67-4dbb-8de5-22a97add3a3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Help">
+      <UniqueIdentifier>{90209be7-55fe-4049-acf1-70f9fd596f91}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -39,6 +42,9 @@
     <ClCompile Include="PdfCompress.cpp">
       <Filter>头文件\Mupdf</Filter>
     </ClCompile>
+    <ClCompile Include="UtilPath.cpp">
+      <Filter>头文件\Help</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h">
@@ -55,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UtilPath.h">
+      <Filter>头文件\Help</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

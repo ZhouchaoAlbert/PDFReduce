@@ -7,8 +7,8 @@ namespace Util
 	namespace Image
 	{
 		//找扩展名
-		LPTSTR FindExtension(LPCTSTR szExeName);
+		CString FindExtension(ATL::CString  strExeName);
 		//图片类型反转
-		BOOL ConvertType(LPCTSTR szImagePathIn, LPCTSTR szImagePathOut, UINT32 bQuality = 50);
+		BOOL ConvertType(ATL::CString strImagePathIn, ATL::CString  strImagePathOut, UINT32 bQuality = 50);
 	}
 }

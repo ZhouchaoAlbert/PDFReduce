@@ -13,7 +13,11 @@ class CPdfCompress
 public:
 	CPdfCompress();
 	~CPdfCompress();
-
+	static CPdfCompress* GetObj()
+	{ 
+		static CPdfCompress obj;
+		return &obj;
+	}
 	UINT32 StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath);
 protected:
 	//初始化操作
@@ -30,16 +34,16 @@ protected:
 	//图片的Buffer 二进制流是否压缩
 	BOOL IsCompressImageStream(pdf_document* doc,INT32 num,INT32 gen);
 
-	//解析资源信息
-	void PraseResImage(std::string szSavePath);
+	//解析资源信
+	void PraseResImage();
 	//保存图片
-	BOOL SaveImage(std::string szSavePath, INT32 nNum);
+	BOOL SaveImage(ATL::CString strImagePath, INT32 nNum);
 	//写pixmap
-	BOOL WritePixmap(fz_context *ctx, fz_pixmap *pix, std::string filepath, int rgb);
+	BOOL WritePixmap(fz_context *ctx, fz_pixmap *pix, ATL::CString strImagePath, int rgb);
 	//图片转换
-	BOOL ImageConvert(CString strSrcImagePath, CString strDestImagePath, INT32 nNum);
+	BOOL ImageConvert(ATL::CString strSrcImagePath, ATL::CString strDestImagePath, INT32 nNum);
 	//数据回写
-	BOOL WriteDataToStream(pdf_obj* obj, CString  strDestImagePath, INT32 nNum);
+	BOOL WriteDataToStream(pdf_obj* obj, ATL::CString  strDestImagePath, INT32 nNum);
 
 private:
 	// 线程回调

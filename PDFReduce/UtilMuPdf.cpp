@@ -6,7 +6,8 @@
 
 UINT32  Util::MuPdf::StartPdfCompress(ATL::CString strPdfOutPath, ATL::CString strPdfPath, ATL::CString strPassword)
 {
-	return Singleton<CPdfCompress>::Instance().StartThread(strPdfOutPath, strPdfPath, strPassword);
+	return CPdfCompress::GetObj()->StartThread(strPdfOutPath, strPdfPath, strPassword);
+	//return Singleton<CPdfCompress>::Instance().StartThread(strPdfOutPath, strPdfPath, strPassword);
 }
 
 void  Util::MuPdf::StopPDFCompress(UINT32 uThreadID)

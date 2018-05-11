@@ -11,7 +11,7 @@
 	<VerticalLayout bkcolor="#FFFFFFFF">
 		<!--标题栏-->
 		<HorizontalLayout height ="40" bkcolor="#FFF5F5F5">
-			<Label text="悦书PDF软件" textpadding="14,0,0,0" textcolor="#FF4C4C4C" font="2" autocalcwidth="true"  tooltip="悦书PDF软件"/>
+			<Label text="悦书PDF工具" textpadding="14,0,0,0" textcolor="#FF4C4C4C" font="2" autocalcwidth="true"  tooltip="悦书PDF软件"/>
 			<Control />
 			<Button name="btn_close"  keyboard="false"  width="38" height="38" normalimage="material/sys_close_normal.png" hotimage="material/sys_close_hot.png" pushedimage="material/sys_close_hot.png"  />
 			<Control width="10"/>

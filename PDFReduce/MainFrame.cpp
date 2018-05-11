@@ -44,7 +44,11 @@ void CMainFrame::InitWindow()
 	SetIcon(m_hIcon, TRUE);
 	SetIcon(m_hIcon, FALSE);
 	m_pTreeList = static_cast<CTabLayoutUI*>(m_PaintManager.FindControl(_T("tab_tree_list")));
-
+	
+	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
+	pEdit->SetText(_T("E:\\test\\convert\\Desert.pdf"));
+	CEditUI* pEditOut = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
+	pEditOut->SetText(_T("E:\\test\\convert\\out.pdf"));
 }
 
 void CMainFrame::OnFinalMessage(HWND hWnd)
@@ -149,18 +153,17 @@ void CMainFrame::StartPDFCompress()
 		return;
 	}
 
-// 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
-// 	ATL::CString strPDFOutPath = pEdit->GetText();
-// 	CString strExeOut = strPDFOutPath.Right(4);
-// 	if (0 != strExeOut.CompareNoCase(_T(".pdf")))
-// 	{
-// 		::MessageBox(m_hWnd, _T("输出的不是PDF文件，请重新输入!"), _T("提示"), MB_OK);
-// 		return;
-// 	}
+	CEditUI* pEditOut = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
+	ATL::CString strPDFOutPath = pEditOut->GetText();
+	CString strExeOut = strPDFOutPath.Right(4);
+	if (0 != strExeOut.CompareNoCase(_T(".pdf")))
+	{
+		::MessageBox(m_hWnd, _T("输出的不是PDF文件，请重新输入!"), _T("提示"), MB_OK);
+		return;
+	}
 	
 	//对PDF 压缩体积处理
-
-	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), _T("E:\\test\\convert"));
+	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), strPDFOutPath);
 }
 
 

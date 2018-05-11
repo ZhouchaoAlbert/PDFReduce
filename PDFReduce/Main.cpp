@@ -1,29 +1,8 @@
 #include <atlstr.h>
 #include "UIlib.h"
+#include "UtilPath.h"
 #include "MainFrame.h"
 using namespace DuiLib;
-
-
-ATL::CString GetResFolder()
-{
-	TCHAR szPath[MAX_PATH] = { 0 };
-	GetModuleFileName(NULL, szPath, MAX_PATH);
-	CString strPath(szPath);
-	INT32 iFind = strPath.ReverseFind(_T('\\'));
-	if (iFind < 0)
-	{
-		return _T("");
-	}
-	strPath = strPath.Left(iFind);
-
-	INT32 ix = strPath.ReverseFind(_T('\\'));
-	if (ix != -1)
-	{
-		return strPath.Mid(0, ix) + _T("\\Resource");
-	}
-	return _T("");
-}
-
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int nCmdShow)
 {
@@ -33,14 +12,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*l
 	if (FAILED(Hr)) return 0;
 	//设置资源管理
 	CPaintManagerUI::SetInstance(hInstance);
-	CString s = GetResFolder();
+	CString s = Util::Path::GetResFolder();
 	CPaintManagerUI::SetResourcePath(s);
 
 	//创建窗口
 	CMainFrame* pMainFrame = new CMainFrame();
 	if (pMainFrame == NULL)
 		return 0;
-	pMainFrame->Create(NULL, _T("PDF压缩体积"), UI_WNDSTYLE_FRAME, 0L, 0, 0, 0, 0);
+	pMainFrame->Create(NULL, _T("悦书PDF工具"), UI_WNDSTYLE_FRAME, 0L, 0, 0, 0, 0);
 	pMainFrame->CenterWindow();
 
 	//消息循环

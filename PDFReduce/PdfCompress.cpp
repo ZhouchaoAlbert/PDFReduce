@@ -6,7 +6,7 @@
 #include<iostream>
 #include <Windows.h>
 #include "UtilImage.h"
-
+#include "UtilPath.h"
 
 
 fz_context_s*  CPdfCompress::ctx = NULL;
@@ -14,6 +14,7 @@ pdf_document* CPdfCompress::doc = NULL;
 
 CPdfCompress::CPdfCompress()
 {
+	
 }
 
 CPdfCompress::~CPdfCompress()
@@ -23,6 +24,7 @@ CPdfCompress::~CPdfCompress()
 
 UINT32 CPdfCompress::StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath)
 {
+	Util::Path::GetImageTempPath(TRUE);
 	m_strPdfPath	= strPdfPath;
 	m_strPassword	= strPassword;
 	m_strPdfOutPath = strPdfOutPath;
@@ -50,8 +52,7 @@ void CPdfCompress::Run()
 {
 	if (Init(m_strPdfPath, m_strPassword))
 	{
-		//test
-		PraseResImage("E:\\test\\convert");
+		PraseResImage();
 	}
 }
 
@@ -116,7 +117,7 @@ BOOL CPdfCompress::IsFlateDecode(pdf_obj* obj)
 	return pdf_is_name(type) && !strcmp(pdf_to_name(type), "FlateDecode");
 }
 
-BOOL  CPdfCompress::WritePixmap(fz_context *ctx, fz_pixmap *pix, std::string filepath, int rgb)
+BOOL  CPdfCompress::WritePixmap(fz_context *ctx, fz_pixmap *pix, ATL::CString strImagePath, int rgb)
 {
 	BOOL bRet = FALSE;
 
@@ -134,7 +135,8 @@ BOOL  CPdfCompress::WritePixmap(fz_context *ctx, fz_pixmap *pix, std::string fil
 	}
 	if (pix->n <= 4)
 	{
-		fz_write_png(ctx, pix, (char*)filepath.c_str(), 0);
+		ATL::CW2A szImagePath(strImagePath, CP_UTF8);
+		fz_write_png(ctx, pix, (char*)szImagePath, 0);
 		bRet = TRUE;
 	}
 	else
@@ -145,14 +147,15 @@ BOOL  CPdfCompress::WritePixmap(fz_context *ctx, fz_pixmap *pix, std::string fil
 	return bRet;
 }
 
-BOOL CPdfCompress::SaveImage(std::string szSavePath, INT32 nNum)
+BOOL CPdfCompress::SaveImage(ATL::CString strImagePath, INT32 nNum)
 {
 	BOOL bRet = FALSE;
-	if (szSavePath.empty())
+	if (strImagePath.IsEmpty())
 	{
 		ATLASSERT(FALSE);
 		return bRet;
 	}
+
 	fz_image   *image;
 	fz_pixmap  *pix;
 	pdf_obj    *ref;
@@ -166,7 +169,7 @@ BOOL CPdfCompress::SaveImage(std::string szSavePath, INT32 nNum)
 	pix = fz_new_pixmap_from_image(ctx, image, 0, 0);
 	fz_drop_image(ctx, image);
 	//rgb mode
-	bRet = WritePixmap(ctx, pix, szSavePath, 1);
+	bRet = WritePixmap(ctx, pix, strImagePath, 1);
 
 	fz_drop_pixmap(ctx, pix);
 	pdf_drop_obj(ref);
@@ -186,28 +189,27 @@ BOOL CPdfCompress::IsCompressImageStream(pdf_document* doc, INT32 num, INT32 gen
 	//Test 数据写本地
 	if (FZ_IMAGE_JPEG  == fz_com_buffer->params.type)
 	{
-		CString strImageFolder = _T("E:\\test\\convert");
 		CString strSrcImage;
-		strSrcImage.Format(_T("%s\\yueshu-img-%d.jpg"), strImageFolder, num);
+		strSrcImage.Format(_T("%s\\yueshu-img-%d.jpg"), Util::Path::GetImageTempPath(), num);
 		CString strDestImage;
-		strDestImage.Format(_T("%s\\sec-yueshu-img-%d.jpg"), strImageFolder, num);
+		strDestImage.Format(_T("%s\\sec-yueshu-img-%d.jpg"), Util::Path::GetImageTempPath(), num);
 		FILE* fp = NULL;
 		fp = _wfopen(strSrcImage, _T("wb"));
 		if (NULL != fp)
 		{
 			fwrite((char*)fz_com_buffer->buffer->data, fz_com_buffer->buffer->len, 1, fp);
 			fclose(fp);
-			
+
 			if (Util::Image::ConvertType(strSrcImage, strDestImage))
 			{
 				pdf_obj  *obj;
 				obj = pdf_load_object(doc, num, 0);
-				if (WriteDataToStream(obj, strDestImage, num))
-				{
-
-				}
+				WriteDataToStream(obj, strDestImage, num);
 			}
+
 		}
+		DeleteFile(strSrcImage);
+		DeleteFile(strDestImage);
 		return FALSE;
 	}
 	else if (FZ_IMAGE_FAX == fz_com_buffer->params.type)
@@ -229,7 +231,7 @@ BOOL CPdfCompress::IsCompressImageStream(pdf_document* doc, INT32 num, INT32 gen
 	return FALSE;
 }
 //解析资源信息
-void CPdfCompress::PraseResImage(std::string szSavePath)
+void CPdfCompress::PraseResImage()
 {
 	UINT32 uObjNums = pdf_count_objects(doc);
 	for (UINT32 uIndex = 1; uIndex < uObjNums; uIndex++)
@@ -241,36 +243,28 @@ void CPdfCompress::PraseResImage(std::string szSavePath)
 			//获取流数据
 			if (IsCompressImageStream(doc, uIndex, 0))
 			{
-				std::stringstream os;
-				os << szSavePath << "\\img-" << uIndex << ".png";
-				if (SaveImage(os.str(), uIndex))
-				{
-					CString strImageFolder = _T("E:\\test\\convert");
-					CString strSrcImage;
-					strSrcImage.Format(_T("%s\\yueshu-%d.png"), strImageFolder,uIndex);
-					CString strDestImage;
-					strDestImage.Format(_T("%s\\yueshu-%d.jpg"), strImageFolder,uIndex);
+				CString strSrcImage, strDestImage;
+				strSrcImage.Format(_T("%s\\yueshu-img-%d.png"), Util::Path::GetImageTempPath(), uIndex);
+				strDestImage.Format(_T("%s\\yueshu-img-%d.jpg"), Util::Path::GetImageTempPath(), uIndex);
 
+				if (SaveImage(strSrcImage, uIndex))
+				{
 					if (ImageConvert(strSrcImage, strDestImage, uIndex))
 					{
 						WriteDataToStream(obj, strDestImage, uIndex);
 					}
-#if 0
-					DeleteFileA(os.str().c_str());
-					std::stringstream os2;
-					os2 << szSavePath << "\\img-" << uIndex << ".jpg";
-					DeleteFileA(os2.str().c_str());
-#endif
 				}
+#if 0
+				DeleteFile(strSrcImage);
+				DeleteFile(strDestImage);
+#endif
 			}
 		}
 		pdf_drop_obj(obj);
 	}
-	std::stringstream os;
-	os << szSavePath << "\\out.pdf";
-	std::string strOutPath = os.str();
-	pdf_write_document(doc, (char*)strOutPath.c_str(), nullptr);
 
+	ATL::CW2A szPdfOutPath(m_strPdfOutPath, CP_UTF8);
+	pdf_write_document(doc, (char*)szPdfOutPath, nullptr);
 
 	//
 	if (doc)
@@ -278,11 +272,11 @@ void CPdfCompress::PraseResImage(std::string szSavePath)
 		pdf_close_document(doc);
 		doc = NULL;
 		fz_free_context(ctx);
+		ctx = NULL;
 	}
-
 }
 
-BOOL CPdfCompress::ImageConvert(CString strSrcImagePath, CString strDestImagePath, INT32 nNum)
+BOOL CPdfCompress::ImageConvert(ATL::CString strSrcImagePath, ATL::CString strDestImagePath, INT32 nNum)
 {
 	BOOL bRet = FALSE;
 	if (strSrcImagePath.IsEmpty() || strDestImagePath.IsEmpty())
@@ -290,9 +284,9 @@ BOOL CPdfCompress::ImageConvert(CString strSrcImagePath, CString strDestImagePat
 		ATLASSERT(FALSE);
 		return bRet;
 	}
-	CString strNum;
+	ATL::CString strNum;
 	strNum.Format(_T("yueshu-img-%d."), nNum);
-	if (strSrcImagePath.Find(strNum) <  0 || strSrcImagePath.Find(strNum))
+	if (strSrcImagePath.Find(strNum) <  0 || strDestImagePath.Find(strNum) < 0)
 	{
 		return bRet;
 	}
@@ -301,9 +295,7 @@ BOOL CPdfCompress::ImageConvert(CString strSrcImagePath, CString strDestImagePat
 }
 
 
-
-
-BOOL  CPdfCompress::WriteDataToStream(pdf_obj* obj, CString  strDestImagePath, INT32 nNum)
+BOOL  CPdfCompress::WriteDataToStream(pdf_obj* obj, ATL::CString  strDestImagePath, INT32 nNum)
 {
 	ATL::CW2A szDestImagePath(strDestImagePath, CP_UTF8);
 
