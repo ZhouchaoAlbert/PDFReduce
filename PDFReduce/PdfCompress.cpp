@@ -48,7 +48,7 @@ UINT WINAPI  CPdfCompress::ThreadProc(void* pVoid)
 
 void CPdfCompress::Run()
 {
-	if (Init(m_strPdfPath,m_strPdfOutPath))
+	if (Init(m_strPdfPath, m_strPassword))
 	{
 		//test
 		PraseResImage("E:\\test\\convert");
@@ -184,7 +184,7 @@ void CPdfCompress::PraseResImage(std::string szSavePath)
 	{
 		pdf_obj  *obj;
 		obj = pdf_load_object(doc, uIndex, 0);
-		if (IsImage(obj) /*&& IsRGBColorSpace(obj)*/ && IsFlateDecode(obj))
+		if (IsImage(obj) /*&& IsRGBColorSpace(obj)*/ /*&& IsFlateDecode(obj)*/)
 		{
 
 			std::stringstream os;
