@@ -157,14 +157,14 @@ BOOL CPdfCompress::SaveImage(std::string szSavePath, INT32 nNum)
 	fz_pixmap  *pix;
 	pdf_obj    *ref;
 
-
 	ref = pdf_new_indirect(doc, nNum, 0);
 
 	//保存图片到文件
 	image = pdf_load_image(doc, ref);
+
+
 	pix = fz_new_pixmap_from_image(ctx, image, 0, 0);
 	fz_drop_image(ctx, image);
-
 	//rgb mode
 	bRet = WritePixmap(ctx, pix, szSavePath, 1);
 
@@ -174,8 +174,60 @@ BOOL CPdfCompress::SaveImage(std::string szSavePath, INT32 nNum)
 	return bRet;
 }
 
+BOOL CPdfCompress::IsCompressImageStream(pdf_document* doc, INT32 num, INT32 gen)
+{
+	fz_compressed_buffer * fz_com_buffer = pdf_load_compressed_stream(doc, num, gen);
+	if (!fz_com_buffer)
+	{
+		ATLASSERT(FALSE);
+		return FALSE;
+	}
+	std::string strBuf((char*)fz_com_buffer->buffer->data, fz_com_buffer->buffer->len);
+	//Test 数据写本地
+	if (FZ_IMAGE_JPEG  == fz_com_buffer->params.type)
+	{
+		CString strImageFolder = _T("E:\\test\\convert");
+		CString strSrcImage;
+		strSrcImage.Format(_T("%s\\yueshu-img-%d.jpg"), strImageFolder, num);
+		CString strDestImage;
+		strDestImage.Format(_T("%s\\sec-yueshu-img-%d.jpg"), strImageFolder, num);
+		FILE* fp = NULL;
+		fp = _wfopen(strSrcImage, _T("wb"));
+		if (NULL != fp)
+		{
+			fwrite((char*)fz_com_buffer->buffer->data, fz_com_buffer->buffer->len, 1, fp);
+			fclose(fp);
+			
+			if (Util::Image::ConvertType(strSrcImage, strDestImage))
+			{
+				pdf_obj  *obj;
+				obj = pdf_load_object(doc, num, 0);
+				if (WriteDataToStream(obj, strDestImage, num))
+				{
 
-
+				}
+			}
+		}
+		return FALSE;
+	}
+	else if (FZ_IMAGE_FAX == fz_com_buffer->params.type)
+	{
+		return TRUE;
+	}
+	else if (FZ_IMAGE_RLD == fz_com_buffer->params.type)
+	{
+		return TRUE;
+	}
+	else if (FZ_IMAGE_FLATE == fz_com_buffer->params.type)
+	{
+		return TRUE;
+	}
+	else if (FZ_IMAGE_LZW == fz_com_buffer->params.type)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
 //解析资源信息
 void CPdfCompress::PraseResImage(std::string szSavePath)
 {
@@ -186,22 +238,31 @@ void CPdfCompress::PraseResImage(std::string szSavePath)
 		obj = pdf_load_object(doc, uIndex, 0);
 		if (IsImage(obj) /*&& IsRGBColorSpace(obj)*/ /*&& IsFlateDecode(obj)*/)
 		{
-
-			std::stringstream os;
-			os << szSavePath << "\\img-" << uIndex << ".png";
-			if (SaveImage(os.str(), uIndex))
+			//获取流数据
+			if (IsCompressImageStream(doc, uIndex, 0))
 			{
+				std::stringstream os;
+				os << szSavePath << "\\img-" << uIndex << ".png";
+				if (SaveImage(os.str(), uIndex))
+				{
+					CString strImageFolder = _T("E:\\test\\convert");
+					CString strSrcImage;
+					strSrcImage.Format(_T("%s\\yueshu-%d.png"), strImageFolder,uIndex);
+					CString strDestImage;
+					strDestImage.Format(_T("%s\\yueshu-%d.jpg"), strImageFolder,uIndex);
 
-				if (ImageConvert(szSavePath, uIndex))
-					WriteDataToStream(obj, szSavePath, uIndex);
+					if (ImageConvert(strSrcImage, strDestImage, uIndex))
+					{
+						WriteDataToStream(obj, strDestImage, uIndex);
+					}
 #if 0
-				DeleteFileA(os.str().c_str());
-				std::stringstream os2;
-				os2 << szSavePath << "\\img-" << uIndex << ".jpg";
-				DeleteFileA(os2.str().c_str());
+					DeleteFileA(os.str().c_str());
+					std::stringstream os2;
+					os2 << szSavePath << "\\img-" << uIndex << ".jpg";
+					DeleteFileA(os2.str().c_str());
 #endif
+				}
 			}
-
 		}
 		pdf_drop_obj(obj);
 	}
@@ -221,40 +282,32 @@ void CPdfCompress::PraseResImage(std::string szSavePath)
 
 }
 
-BOOL CPdfCompress::ImageConvert(std::string szSavePath, INT32 nNum)
+BOOL CPdfCompress::ImageConvert(CString strSrcImagePath, CString strDestImagePath, INT32 nNum)
 {
 	BOOL bRet = FALSE;
-	if (szSavePath.empty())
+	if (strSrcImagePath.IsEmpty() || strDestImagePath.IsEmpty())
 	{
 		ATLASSERT(FALSE);
 		return bRet;
 	}
-
-	std::stringstream osin;
-	osin << szSavePath << "\\img-" << nNum << ".png";
-
-	std::stringstream osout;
-	osout << szSavePath << "\\img-" << nNum << ".jpg";
-
-	ATL::CA2W strSrcImagePath(osin.str().c_str(), CP_ACP);
-	ATL::CA2W strImageOutPath(osout.str().c_str(), CP_ACP);
-
-	bRet = Util::Image::ConvertType(strSrcImagePath, strImageOutPath);
-
+	CString strNum;
+	strNum.Format(_T("yueshu-img-%d."), nNum);
+	if (strSrcImagePath.Find(strNum) <  0 || strSrcImagePath.Find(strNum))
+	{
+		return bRet;
+	}
+	bRet = Util::Image::ConvertType(strSrcImagePath, strDestImagePath);
 	return bRet;
 }
 
 
 
 
-
-BOOL  CPdfCompress::WriteDataToStream(pdf_obj* obj, std::string szSavePath, INT32 nNum)
+BOOL  CPdfCompress::WriteDataToStream(pdf_obj* obj, CString  strDestImagePath, INT32 nNum)
 {
-	//图片路径
-	std::stringstream osout;
-	osout << szSavePath << "\\img-" << nNum << ".jpg";
+	ATL::CW2A szDestImagePath(strDestImagePath, CP_UTF8);
 
-	std::ifstream fin(osout.str().c_str(), std::ios::binary);
+	std::ifstream fin(szDestImagePath, std::ios::binary);
 	fin.seekg(0, std::ios::end);
 	UINT32 uSize = fin.tellg();
 	UINT8* szBuf = new (std::nothrow)UINT8[uSize + 1];

@@ -24,8 +24,11 @@ protected:
 	BOOL IsImage(pdf_obj* obj);
 	//彩色空间是RGB
 	BOOL IsRGBColorSpace(pdf_obj* obj);
-
+	//是zlib压缩
 	BOOL IsFlateDecode(pdf_obj* obj);
+
+	//图片的Buffer 二进制流是否压缩
+	BOOL IsCompressImageStream(pdf_document* doc,INT32 num,INT32 gen);
 
 	//解析资源信息
 	void PraseResImage(std::string szSavePath);
@@ -34,9 +37,9 @@ protected:
 	//写pixmap
 	BOOL WritePixmap(fz_context *ctx, fz_pixmap *pix, std::string filepath, int rgb);
 	//图片转换
-	BOOL ImageConvert(std::string szSavePath, INT32 nNum);
+	BOOL ImageConvert(CString strSrcImagePath, CString strDestImagePath, INT32 nNum);
 	//数据回写
-	BOOL WriteDataToStream(pdf_obj* obj, std::string szSavePath, INT32 nNum);
+	BOOL WriteDataToStream(pdf_obj* obj, CString  strDestImagePath, INT32 nNum);
 
 private:
 	// 线程回调
