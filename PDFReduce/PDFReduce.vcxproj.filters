@@ -25,6 +25,9 @@
     <Filter Include="头文件\Help">
       <UniqueIdentifier>{90209be7-55fe-4049-acf1-70f9fd596f91}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\DropTarget">
+      <UniqueIdentifier>{33fea4d4-9532-4dc4-968d-497e36610bdc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -45,6 +48,9 @@
     <ClCompile Include="UtilPath.cpp">
       <Filter>头文件\Help</Filter>
     </ClCompile>
+    <ClCompile Include="DropTarget\DropTargetReal.cpp">
+      <Filter>头文件\DropTarget</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h">
@@ -64,6 +70,9 @@
     </ClInclude>
     <ClInclude Include="UtilPath.h">
       <Filter>头文件\Help</Filter>
+    </ClInclude>
+    <ClInclude Include="DropTarget\DropTargetReal.h">
+      <Filter>头文件\DropTarget</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

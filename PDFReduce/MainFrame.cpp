@@ -6,6 +6,9 @@
 #include "UtilImage.h"
 #include "UtilMuPdf.h"
 #include "resource.h"
+#include "DropTarget/DropTargetReal.h"
+#include "Singleton.h"
+
 
 CMainFrame::CMainFrame()
 {
@@ -49,11 +52,14 @@ void CMainFrame::InitWindow()
 	pEdit->SetText(_T("E:\\test\\convert\\Desert.pdf"));
 	CEditUI* pEditOut = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
 	pEditOut->SetText(_T("E:\\test\\convert\\out.pdf"));
+	
+	Singleton<CDropTargetReal>::Instance().RegisterDropTarget(m_hWnd, this);
+	::DragAcceptFiles(m_hWnd, true);
 }
 
 void CMainFrame::OnFinalMessage(HWND hWnd)
 {
-
+//	Singleton<CDropTargetReal>::Instance().RevokeDropTarget(m_hWnd);
 }
 
 LRESULT CMainFrame::ResponseDefaultKeyEvent(WPARAM wParam)
@@ -114,7 +120,18 @@ void CMainFrame::Notify(TNotifyUI& msg)
 
 LRESULT CMainFrame::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	LRESULT hr = 0;
+	HRESULT hr = S_OK;
+
+
+	switch (uMsg)
+	{
+	case WM_DROPFILES:
+		hr = OnDropFiles(uMsg, wParam, lParam, bHandled);
+		break;
+
+	default:
+		break;
+	}
 
 	if (bHandled) return hr;
 	return __super::HandleCustomMessage(uMsg, wParam, lParam, bHandled);
@@ -196,23 +213,101 @@ void CMainFrame::StartPicConvert()
 
 void CMainFrame::SelectPDFFolderDialog()
 {
-	TCHAR szBuffer[MAX_PATH] = { 0 };
-	BROWSEINFO bi;
-	ZeroMemory(&bi, sizeof(BROWSEINFO));
-	bi.hwndOwner = NULL;
-	bi.pszDisplayName = szBuffer;
-	bi.lpszTitle = _T("从下面选择PDF文件:");
-	bi.ulFlags = BIF_BROWSEINCLUDEFILES;
-	LPITEMIDLIST idl = SHBrowseForFolder(&bi);
-	if (NULL == idl)
+
+	CString	szFilter = _T("文件(*.pdf)|*.pdf||");
+	CFileDialogEx dlg;
+	POSITION position;
+	CString	szFileName;
+	vector<CString>	vecFileList;
+
+	dlg.SetFilter(szFilter);
+	dlg.SetFlags(OFN_FILEMUSTEXIST | OFN_EXPLORER);
+	dlg.SetMultiSel(TRUE);
+	dlg.SetFileNameBufferSize(1024);
+	dlg.SetParentWnd(m_hWnd);
+	if (!dlg.ShowOpenFileDlg()) return;
+
+	position = dlg.GetStartPosition();
+	while (position != NULL)
 	{
+		szFileName = dlg.GetNextPathName(position);
+		vecFileList.push_back(szFileName);
+	}
+	if (vecFileList.size() > 2)
+	{
+		MessageBox(NULL, _T("请添加一个PDF文件！"), _T("提示"), MB_OK);
 		return;
 	}
-	SHGetPathFromIDList(idl, szBuffer);
 	
-	CString strPDFPath(szBuffer);
+	CString strPDFPath(vecFileList[0]);
 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
 	if (pEdit && !strPDFPath.IsEmpty())pEdit->SetText(strPDFPath);
 }
 
 
+LRESULT CMainFrame::OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	HDROP hDropInfo = (HDROP)wParam;
+	INT	nFileCount = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
+	if (nFileCount > 2)
+	{
+		MessageBox(NULL, _T("请托一个PDF文件放到改区域！"), _T("提示"),MB_OK);
+		return S_OK;
+	}
+
+	POINT point;
+	::GetCursorPos(&point);
+	ScreenToClient(m_hWnd, &point);
+	CButtonUI* pControlUI = static_cast<CButtonUI*>(m_PaintManager.FindControl(point));
+	if (NULL == pControlUI)
+	{
+		return S_OK;
+	}
+	CString strName = pControlUI->GetName();
+	if (0 != strName.CompareNoCase(_T("btn_drop")))
+	{
+		return S_OK;
+	}
+
+
+	BOOL bIsCopyFile = (BOOL)lParam;
+	vector<CString> vecFileList;
+	for (int i = 0; i < nFileCount; i++)
+	{
+		TCHAR szFileName[MAX_PATH] = { 0 };
+		ZeroMemory(szFileName, sizeof(szFileName));
+		::DragQueryFile(hDropInfo, i, szFileName, MAX_PATH);
+		vecFileList.push_back(szFileName);
+	}
+	::DragFinish(hDropInfo);
+	if (vecFileList.size() > 0)
+	{
+		
+		CString strPDFPath(vecFileList[0]);
+		if (0 == strPDFPath.Right(4).CompareNoCase(_T(".pdf")))
+		{
+			CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
+			if (pEdit && !strPDFPath.IsEmpty())pEdit->SetText(strPDFPath);
+		}
+	
+	}
+	return S_OK;
+}
+
+
+HRESULT CMainFrame::OnDropEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+	return m_PaintManager.OnDropEnter(pDataObj, grfKeyState, pt, pdwEffect);
+}
+HRESULT CMainFrame::OnDropOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+	return m_PaintManager.OnDropOver(grfKeyState, pt, pdwEffect);
+}
+HRESULT CMainFrame::OnDropLeave()
+{
+	return m_PaintManager.OnDropLeave();
+}
+HRESULT CMainFrame::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+	return m_PaintManager.OnDrop(pDataObj, grfKeyState, pt, pdwEffect);
+}

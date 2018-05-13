@@ -19,9 +19,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*l
 	CMainFrame* pMainFrame = new CMainFrame();
 	if (pMainFrame == NULL)
 		return 0;
-	pMainFrame->Create(NULL, _T("悦书PDF工具"), UI_WNDSTYLE_FRAME, 0L, 0, 0, 0, 0);
+	pMainFrame->Create(NULL, _T("悦书PDF工具"), WS_OVERLAPPEDWINDOW, 0L, 0, 0, 0, 0);
 	pMainFrame->CenterWindow();
-
+	pMainFrame->ShowWindow(true, true);
 	//消息循环
 	CPaintManagerUI::MessageLoop();
 

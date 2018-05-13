@@ -3,8 +3,9 @@
 using namespace  DuiLib;
 #include <string>
 using namespace std;
-
-class CMainFrame : public WindowImplBase
+#include "DropTargetLink.h"
+class CMainFrame : public WindowImplBase,
+				   public IDropTargetLink
 {
 public:
 	CMainFrame();
@@ -22,7 +23,14 @@ public:// UI初始化
 	virtual void Notify(TNotifyUI& msg);
 
 	LRESULT HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	
+	virtual LRESULT OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+	HRESULT OnDropEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+	HRESULT OnDropOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+	HRESULT OnDropLeave();
+	HRESULT OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+
+public:
 	//启动PDF压缩
 	void StartPDFCompress();
 	//开始图片转换
