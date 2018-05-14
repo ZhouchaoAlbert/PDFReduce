@@ -2,6 +2,8 @@
 #include <atlstr.h>
 #include <string>
 
+#define  WM_UI_PROCESS WM_USER + 1000
+
 extern "C"
 {
 #include <mupdf/pdf.h>
@@ -18,7 +20,7 @@ public:
 		static CPdfCompress obj;
 		return &obj;
 	}
-	UINT32 StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath);
+	UINT32 StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath, HWND hWnd);
 protected:
 	//初始化操作
 	BOOL Init(ATL::CString strPdfPath = _T(""), ATL::CString strPassword = _T(""));
@@ -49,11 +51,13 @@ private:
 	// 线程回调
 	static UINT WINAPI  ThreadProc(void* pVoid);
 	void Run();
+	void JumpThreadSetProcess(INT32 i, INT32 j);
+	BOOL ImageSizeCompare(CString strSrcIamge, CString strDestImage);
 private:
 	ATL::CString m_strPdfPath;
 	ATL::CString m_strPassword;
 	ATL::CString m_strPdfOutPath;
-
+	HWND m_hWnd;
 	static fz_context_s* ctx; 
 	static pdf_document* doc; 
 };

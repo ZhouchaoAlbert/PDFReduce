@@ -8,7 +8,7 @@
 #include "resource.h"
 #include "DropTarget/DropTargetReal.h"
 #include "Singleton.h"
-
+#include "PdfCompress.h"
 
 CMainFrame::CMainFrame()
 {
@@ -53,7 +53,7 @@ void CMainFrame::InitWindow()
 	CEditUI* pEditOut = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
 	pEditOut->SetText(_T("E:\\test\\convert\\out.pdf"));
 	
-	Singleton<CDropTargetReal>::Instance().RegisterDropTarget(m_hWnd, this);
+	//Singleton<CDropTargetReal>::Instance().RegisterDropTarget(m_hWnd, this);
 	::DragAcceptFiles(m_hWnd, true);
 }
 
@@ -128,7 +128,9 @@ LRESULT CMainFrame::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	case WM_DROPFILES:
 		hr = OnDropFiles(uMsg, wParam, lParam, bHandled);
 		break;
-
+	case WM_UI_PROCESS:
+		SetCompressProcess(wParam, lParam);
+		break;
 	default:
 		break;
 	}
@@ -180,7 +182,7 @@ void CMainFrame::StartPDFCompress()
 	}
 	
 	//对PDF 压缩体积处理
-	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), strPDFOutPath);
+	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), strPDFOutPath,m_hWnd);
 }
 
 
@@ -282,14 +284,12 @@ LRESULT CMainFrame::OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	::DragFinish(hDropInfo);
 	if (vecFileList.size() > 0)
 	{
-		
 		CString strPDFPath(vecFileList[0]);
 		if (0 == strPDFPath.Right(4).CompareNoCase(_T(".pdf")))
 		{
 			CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
 			if (pEdit && !strPDFPath.IsEmpty())pEdit->SetText(strPDFPath);
 		}
-	
 	}
 	return S_OK;
 }
@@ -311,3 +311,14 @@ HRESULT CMainFrame::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, 
 {
 	return m_PaintManager.OnDrop(pDataObj, grfKeyState, pt, pdwEffect);
 }
+
+
+void CMainFrame::SetCompressProcess(INT32 i, INT32 j)
+{
+	CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
+	if (pProgress)
+	{
+		pProgress->SetValue(i * 100/ j);
+	}
+}
+

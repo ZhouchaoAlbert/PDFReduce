@@ -8,7 +8,7 @@ namespace Util
 	namespace MuPdf
 	{
 		//Æô¶¯PDFÑ¹Ëõ
-		UINT32  StartPdfCompress(ATL::CString strPdfOutPath, ATL::CString strPdfPath, ATL::CString strPassword);
+		UINT32  StartPdfCompress(ATL::CString strPdfOutPath, ATL::CString strPdfPath, ATL::CString strPassword,HWND hWnd);
 
 		//Í£Ö¹Ñ¹ËõPDF
 		void  StopPDFCompress(UINT32 uThreadID);

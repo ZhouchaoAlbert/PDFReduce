@@ -4,6 +4,7 @@
 #include "MainFrame.h"
 using namespace DuiLib;
 
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int nCmdShow)
 {
 	
@@ -24,7 +25,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*l
 	pMainFrame->ShowWindow(true, true);
 	//ÏûÏ¢Ñ­»·
 	CPaintManagerUI::MessageLoop();
-
+	
 	delete pMainFrame;
 	pMainFrame = NULL;
 	::CoUninitialize();

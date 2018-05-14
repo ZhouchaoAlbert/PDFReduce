@@ -59,7 +59,8 @@
 						
 						<Control height="10" />
 					
-						<HorizontalLayout height="30">
+						<HorizontalLayout height="30"  padding="10,0,0,0" >
+							<Progress name="progress"  width="480"   height="5" bkcolor="#FFDEDEDE" disabledtextcolor="#FFA7A6AA" align="center" foreimage="Material\progressbar.png"  min="0" max="100" value="0" hor="true"/>
 							<Control />
 							<Button name="btn_open_pdf_compress" width="100" bkimage="file='material/btn_start_compress.png' corner='5,5,5,5'" />
 							<Control width="10" />

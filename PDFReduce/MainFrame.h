@@ -37,6 +37,10 @@ public:
 	void StartPicConvert();
    //选择打开PDF路径
 	void SelectPDFFolderDialog();
+
+	void SetCompressProcess(INT32 i, INT32 j);
+
+	
 private:
 	CTabLayoutUI* m_pTreeList;
 	HICON         m_hIcon;

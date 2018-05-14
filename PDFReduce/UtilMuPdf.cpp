@@ -4,9 +4,9 @@
 #include "PdfCompress.h"
 
 
-UINT32  Util::MuPdf::StartPdfCompress(ATL::CString strPdfOutPath, ATL::CString strPdfPath, ATL::CString strPassword)
+UINT32  Util::MuPdf::StartPdfCompress(ATL::CString strPdfOutPath, ATL::CString strPdfPath, ATL::CString strPassword, HWND hWnd)
 {
-	return CPdfCompress::GetObj()->StartThread(strPdfOutPath, strPdfPath, strPassword);
+	return CPdfCompress::GetObj()->StartThread(strPdfOutPath, strPdfPath, strPassword, hWnd);
 	//return Singleton<CPdfCompress>::Instance().StartThread(strPdfOutPath, strPdfPath, strPassword);
 }
 
