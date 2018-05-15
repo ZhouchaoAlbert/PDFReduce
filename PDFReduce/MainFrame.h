@@ -4,6 +4,10 @@ using namespace  DuiLib;
 #include <string>
 using namespace std;
 #include "DropTargetLink.h"
+#include "GSWin32Parse.h"
+#include <atlstr.h>
+using namespace ATL;
+
 class CMainFrame : public WindowImplBase,
 				   public IDropTargetLink
 {

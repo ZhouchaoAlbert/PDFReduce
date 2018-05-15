@@ -97,8 +97,6 @@ void CPdfCompress::Run()
 	if (Init(m_strPdfPath, m_strPassword))
 	{
 		PraseResImage();
-		
-	
 	}
 }
 
@@ -205,18 +203,35 @@ BOOL CPdfCompress::SaveImage(ATL::CString strImagePath, INT32 nNum)
 		return bRet;
 	}
 
-	fz_image   *image;
-	fz_pixmap  *pix;
-	pdf_obj    *ref;
+	fz_image   *image = NULL;
+	fz_pixmap  *pix = NULL;
+	pdf_obj    *ref = NULL;
+
 
 	ref = pdf_new_indirect(doc, nNum, 0);
-
+	UINT32 u = 0;
 	//保存图片到文件
 	image = pdf_load_image(doc, ref);
-
+	if (!image)
+	{
+		return bRet;
+	}
 	//std::string strBuffer((const char*)image->buffer->buffer->data,image->buffer->buffer->len);
+	
+	fz_try(ctx)
+	{
+		pix = fz_new_pixmap_from_image(ctx, image, 0, 0);
+		if (!pix)
+		{
+			return bRet;
+		}
 
-	pix = fz_new_pixmap_from_image(ctx, image, 0, 0);
+	}
+	fz_catch(ctx)
+	{
+		u = GetLastError();
+	}
+
 	fz_drop_image(ctx, image);
 	//rgb mode
 	bRet = WritePixmap(ctx, pix, strImagePath, 1);
@@ -330,9 +345,10 @@ void CPdfCompress::PraseResImage()
 		i++;
 	}
 	i = 1;
-	ATL::CW2A szPdfOutPath(m_strPdfOutPath, CP_UTF8);
-	pdf_write_document(doc, (char*)szPdfOutPath, nullptr);
-
+	ATL::CW2A szPdfOutPath(m_strPdfOutPath, CP_UTF8);	
+	fz_write_options opts;
+	opts.do_garbage =2;
+	pdf_write_document(doc, (char*)szPdfOutPath, &opts);
 	//
 	if (doc)
 	{

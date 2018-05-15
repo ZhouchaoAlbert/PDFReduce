@@ -98,6 +98,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DropTarget\DropTargetReal.cpp" />
+    <ClCompile Include="GSWin32Parse.cpp" />
     <ClCompile Include="PdfCompress.cpp" />
     <ClCompile Include="UtilImage.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -107,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DropTarget\DropTargetReal.h" />
+    <ClInclude Include="GSWin32Parse.h" />
     <ClInclude Include="PdfCompress.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="UtilImage.h" />

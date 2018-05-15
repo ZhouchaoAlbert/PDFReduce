@@ -9,7 +9,7 @@ ATL::CString Util::Path::GetResFolder()
 {
 	TCHAR szPath[MAX_PATH] = { 0 };
 	GetModuleFileName(NULL, szPath, MAX_PATH);
-	CString strPath(szPath);
+	ATL::CString strPath(szPath);
 	INT32 iFind = strPath.ReverseFind(_T('\\'));
 	if (iFind < 0)
 	{
@@ -25,6 +25,41 @@ ATL::CString Util::Path::GetResFolder()
 	return _T("");
 }
 
+ATL::CString Util::Path::GetExePath()
+{
+	TCHAR szPath[MAX_PATH] = { 0 };
+	::GetModuleFileName(NULL, szPath, MAX_PATH);
+	ATL::CString strPath(szPath);
+	INT32 iFind = strPath.ReverseFind(_T('\\'));
+	if (iFind < 0)
+	{
+		ATLASSERT(FALSE);
+		return _T("");
+	}
+	strPath = strPath.Left(iFind);
+	return strPath;
+}
+
+ATL::CString Util::Path::GetInstallFolder()
+{
+	ATL::CString strPath = GetExePath();
+	ATLASSERT(!strPath.IsEmpty());
+	INT32 iFind = strPath.ReverseFind(_T('\\'));
+	if (iFind < 0)
+	{
+		ATLASSERT(FALSE);
+		return _T("");
+	}
+	strPath = strPath.Mid(0, iFind);
+	return strPath;
+}
+
+
+BOOL Util::Path::IsFileExist(const ATL::CString strFile)
+{
+	DWORD dwAttrib = GetFileAttributes(strFile);
+	return INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+}
 
 //获取我的文档目录
 ATL::CString Util::Path::GetMyDocPath()
@@ -79,15 +114,15 @@ ATL::CString Util::Path::GetParentDirPath(ATL::CString strFilePath)
 
 BOOL Util::Path::ValidFilePath(CString strFilePath)
 {
-	CString strDirPath = GetParentDirPath(strFilePath);
+	ATL::CString strDirPath = GetParentDirPath(strFilePath);
 
 	return ValidDirPath(strDirPath);
 }
 
 
-BOOL Util::Path::ValidDirPath(CString strDirPath)
+BOOL Util::Path::ValidDirPath(ATL::CString strDirPath)
 {
-	CString strParentPath = GetParentDirPath(strDirPath);
+	ATL::CString strParentPath = GetParentDirPath(strDirPath);
 
 	if (strParentPath.IsEmpty())
 	{
@@ -115,7 +150,7 @@ BOOL Util::Path::ValidDirPath(CString strDirPath)
 
 ATL::CString Util::Path::GetImageTempPath(BOOL bCreateIfNotExist/* = FALSE*/)
 {
-	CString strDir = GetDataFolder(TRUE) + _T("\\TempImage");
+	ATL::CString strDir = GetDataFolder(TRUE) + _T("\\TempImage");
 	if (bCreateIfNotExist != FALSE)
 	{
 		if (!ValidDirPath(strDir))
@@ -125,4 +160,47 @@ ATL::CString Util::Path::GetImageTempPath(BOOL bCreateIfNotExist/* = FALSE*/)
 		}
 	}
 	return strDir;
+}
+
+ATL::CString Util::Path::GetPDFTempPath(BOOL bCreateIfNotExist/* = FALSE*/)
+{
+	ATL::CString strDir = GetDataFolder(TRUE) + _T("\\TempPDF");
+	if (bCreateIfNotExist != FALSE)
+	{
+		if (!ValidDirPath(strDir))
+		{
+			ATLASSERT(FALSE);
+			return _T("");
+		}
+	}
+	return strDir;
+}
+
+void Util::Path::StringSplit(CString strSource, CString strSplit, std::vector<CString>& vecSplit)
+{
+	vecSplit.clear();
+	if (strSource.IsEmpty())
+		return;
+	if (strSplit.IsEmpty())
+		vecSplit.push_back(strSource);
+	else
+	{
+		CString strT = L"";
+		int nIndex = 0;
+		while (!strSource.IsEmpty())
+		{
+			nIndex = strSource.Find(strSplit);
+			if (nIndex >= 0)
+			{
+				strT = strSource.Left(nIndex);
+				strSource.Delete(0, strT.GetLength() + strSplit.GetLength());
+			}
+			else
+			{
+				strT = strSource;
+				strSource = L"";
+			}
+			vecSplit.push_back(strT);
+		}
+	}
 }

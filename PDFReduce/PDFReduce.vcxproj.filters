@@ -28,6 +28,9 @@
     <Filter Include="头文件\DropTarget">
       <UniqueIdentifier>{33fea4d4-9532-4dc4-968d-497e36610bdc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\gswin32c">
+      <UniqueIdentifier>{5fd8a48b-1c49-4ea5-bb23-79b6a2101672}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -51,6 +54,9 @@
     <ClCompile Include="DropTarget\DropTargetReal.cpp">
       <Filter>头文件\DropTarget</Filter>
     </ClCompile>
+    <ClCompile Include="GSWin32Parse.cpp">
+      <Filter>头文件\gswin32c</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h">
@@ -73,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="DropTarget\DropTargetReal.h">
       <Filter>头文件\DropTarget</Filter>
+    </ClInclude>
+    <ClInclude Include="GSWin32Parse.h">
+      <Filter>头文件\gswin32c</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

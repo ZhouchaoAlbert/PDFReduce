@@ -4,16 +4,15 @@
 #include "MainFrame.h"
 using namespace DuiLib;
 
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int nCmdShow)
 {
-	
+
 	// COM
 	HRESULT Hr = ::CoInitialize(NULL);
 	if (FAILED(Hr)) return 0;
 	//设置资源管理
 	CPaintManagerUI::SetInstance(hInstance);
-	CString s = Util::Path::GetResFolder();
+	ATL::CString s = Util::Path::GetResFolder();
 	CPaintManagerUI::SetResourcePath(s);
 
 	//创建窗口

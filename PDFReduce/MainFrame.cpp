@@ -9,6 +9,7 @@
 #include "DropTarget/DropTargetReal.h"
 #include "Singleton.h"
 #include "PdfCompress.h"
+#include "UtilPath.h"
 
 CMainFrame::CMainFrame()
 {
@@ -55,6 +56,7 @@ void CMainFrame::InitWindow()
 	
 	//Singleton<CDropTargetReal>::Instance().RegisterDropTarget(m_hWnd, this);
 	::DragAcceptFiles(m_hWnd, true);
+	
 }
 
 void CMainFrame::OnFinalMessage(HWND hWnd)
@@ -131,6 +133,24 @@ LRESULT CMainFrame::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	case WM_UI_PROCESS:
 		SetCompressProcess(wParam, lParam);
 		break;
+	case UM_GSWIN32_UI_TASK:
+	{
+		ST_PARSE_RESULT* pParseResult = (ST_PARSE_RESULT*)wParam;
+		CString strLine;
+		strLine = pParseResult->strLine;
+		UINT32 uValue  = pParseResult->uProcess;
+		CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
+		if (pParseTips)
+		{
+			pParseTips->SetText(strLine);
+		}
+		CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
+		if (pProgress)
+		{
+			pProgress->SetValue(uValue);
+		}
+	}
+	break;
 	default:
 		break;
 	}
@@ -145,7 +165,6 @@ BOOL IsFileExist(const CString& csFile)
 	DWORD dwAttrib = GetFileAttributes(csFile);
 	return INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
 }
-
 
 
 void CMainFrame::StartPDFCompress()
@@ -181,8 +200,16 @@ void CMainFrame::StartPDFCompress()
 		return;
 	}
 	
+#if 0
 	//对PDF 压缩体积处理
-	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), strPDFOutPath,m_hWnd);
+	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), strPDFOutPath, m_hWnd);
+#else
+
+	Singleton<CGSWin32Parse>::Instance().InitCmdLineParam(strPDFPath, strPDFOutPath, m_hWnd);
+	Singleton<CGSWin32Parse>::Instance().PipeCmdLine();
+
+#endif
+
 }
 
 

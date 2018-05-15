@@ -70,7 +70,11 @@
 							<Control />
 							<Button  name="btn_drop" width="530" height="360" bkimage="material/dropbk.png" droptarget="true"/>
 							<Control />
-						</HorizontalLayout>		
+						</HorizontalLayout>	
+						<HorizontalLayout height="30">
+							<Label text="信息输出：" bkcolor="#FF2d87ed" width="60" />
+							<Label name="label_parse_tips" bkcolor="#FF2d87ed"  />
+						</HorizontalLayout>	
 					</VerticalLayout>
 				</VerticalLayout>
 				

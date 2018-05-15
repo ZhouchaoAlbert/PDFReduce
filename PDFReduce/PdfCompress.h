@@ -60,5 +60,6 @@ private:
 	HWND m_hWnd;
 	static fz_context_s* ctx; 
 	static pdf_document* doc; 
+	CRITICAL_SECTION ctxAccess;
 };
 
