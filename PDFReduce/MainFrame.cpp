@@ -200,7 +200,7 @@ void CMainFrame::StartPDFCompress()
 		return;
 	}
 	
-#if 0
+#if 1
 	//对PDF 压缩体积处理
 	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), strPDFOutPath, m_hWnd);
 #else

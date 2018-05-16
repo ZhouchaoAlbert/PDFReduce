@@ -46,6 +46,9 @@ BOOL CGSWin32Parse::Init(ATL::CString strPdfPath, ATL::CString strPassword)
 		return FALSE;
 	}
 
+
+
+
 	m_uPagesCount = pdf_count_pages(doc);
 	return TRUE;
 }
@@ -53,7 +56,6 @@ BOOL CGSWin32Parse::Init(ATL::CString strPdfPath, ATL::CString strPassword)
 
 void CGSWin32Parse::InitCmdLineParam(CString strSrcPDFPath, CString strDestPDFPath, HWND hWnd)
 {
-
 	if (!Util::Path::IsFileExist(strSrcPDFPath) /*|| !Util::Path::IsFileExist(strDestPDFPath)*/)
 	{
 		return;
@@ -72,10 +74,26 @@ void CGSWin32Parse::InitCmdLineParam(CString strSrcPDFPath, CString strDestPDFPa
 	}
 	CString strFile = strSrcPDFPath.Right(strSrcPDFPath.GetLength() - uFind - 1);
 	CString strTempPDFPath;
-	strTempPDFPath.Format(_T("%s\\%s"), Util::Path::GetPDFTempPath(), strFile);
+	strTempPDFPath.Format(_T("%s\\%s"), Util::Path::GetPDFTempPath(TRUE), strFile);
 
 	//初始化获取 总页数
 	Init(strSrcPDFPath, _T(""));
+	{
+		ATL::CW2A szPdfOutPath(strTempPDFPath, CP_UTF8);
+		fz_write_options opts = { 0 };
+		opts.do_incremental = 0;
+		opts.do_garbage = 3;
+		pdf_write_document(doc, (char*)szPdfOutPath, nullptr);
+		if (doc)
+		{
+			pdf_close_document(doc);
+			doc = NULL;
+			fz_free_context(ctx);
+			ctx = NULL;
+		}
+	}
+
+	strSrcPDFPath = strTempPDFPath;
 
 	CString strGSWin32ExePath;
 	strGSWin32ExePath.Format(_T("\"%s\\gswin32c.exe\""), Util::Path::GetExePath());
@@ -168,11 +186,8 @@ void CGSWin32Parse::Run(){
 					uCurProcess++;
 				}
 			}
-			
-
 		}
 	
-
 		CloseHandle(piProcInfo.hProcess);
 		CloseHandle(piProcInfo.hThread);
 	} while (0);
