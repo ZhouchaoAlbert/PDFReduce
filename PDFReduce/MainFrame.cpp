@@ -11,14 +11,22 @@
 #include "PdfCompress.h"
 #include "UtilPath.h"
 
-CMainFrame::CMainFrame()
+CMainFrame::CMainFrame():
+m_uCompressMode(1)
 {
 }
 
 
 CMainFrame::~CMainFrame()
 {
-
+	if (1 == m_uCompressMode)
+	{
+		Singleton<CPdfCompress>::UnInstance();
+	}
+	else if (2 == m_uCompressMode)
+	{
+		Singleton<CGSWin32Parse>::UnInstance();
+	}
 }
 
 
@@ -91,7 +99,7 @@ void CMainFrame::Notify(TNotifyUI& msg)
 		{
 			ShowWindow(false);
 			PostQuitMessage(0);
-		
+
 		}
 		else if (szName == _T("opt_pdf_reduce"))  //select pdf reduce
 		{
@@ -104,7 +112,7 @@ void CMainFrame::Notify(TNotifyUI& msg)
 		else if (szName == _T("opt_pdf_author"))  //select pdf author
 		{
 			m_pTreeList->SelectItem(2);
-		}	
+		}
 		else if (szName == _T("btn_open_pdf_compress"))  //启动PDF体积压缩
 		{
 			StartPDFCompress();
@@ -116,6 +124,20 @@ void CMainFrame::Notify(TNotifyUI& msg)
 		else if (szName == _T("btn_open_pdf_path"))  //选择打开PDF路径框
 		{
 			SelectPDFFolderDialog();
+		}
+
+	}
+	else if(msg.sType == DUI_MSGTYPE_ITEMSELECT)
+	{
+		CDuiString szName = msg.pSender->GetName();
+		if (szName == _T("comb_group"))
+		{
+			if (msg.wParam == 0){
+				m_uCompressMode = 1;
+			}
+			else if (msg.wParam == 1){
+				m_uCompressMode = 2;
+			}
 		}
 	}
 }
@@ -130,27 +152,6 @@ LRESULT CMainFrame::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	case WM_DROPFILES:
 		hr = OnDropFiles(uMsg, wParam, lParam, bHandled);
 		break;
-	case WM_UI_PROCESS:
-		SetCompressProcess(wParam, lParam);
-		break;
-	case UM_GSWIN32_UI_TASK:
-	{
-		ST_PARSE_RESULT* pParseResult = (ST_PARSE_RESULT*)wParam;
-		CString strLine;
-		strLine = pParseResult->strLine;
-		UINT32 uValue  = pParseResult->uProcess;
-		CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
-		if (pParseTips)
-		{
-			pParseTips->SetText(strLine);
-		}
-		CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
-		if (pProgress)
-		{
-			pProgress->SetValue(uValue);
-		}
-	}
-	break;
 	default:
 		break;
 	}
@@ -169,7 +170,6 @@ BOOL IsFileExist(const CString& csFile)
 
 void CMainFrame::StartPDFCompress()
 {
-
 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
 	ATL::CString strPDFPath = pEdit->GetText();
 	if (strPDFPath.IsEmpty())
@@ -204,30 +204,59 @@ void CMainFrame::StartPDFCompress()
 	{
 		pProgress->SetValue(0);
 	}
-#if 1
-	//对PDF 压缩体积处理
-	Singleton<CPdfCompress>::Instance().SetProcessCallback(
-		[this](int nVal){
-		CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
-		if (pProgress)
-		{
-			pProgress->SetValue(nVal);
-		}
-		if (nVal ==100)
-		{
-			//Singleton<CPdfCompress>::Instance().ExistThread(false);
-			//Singleton<CPdfCompress>::UnInstance();
-		}
-	});
-	Singleton<CPdfCompress>::Instance().StartThread(strPDFPath, _T(""), strPDFOutPath);
 
-#else
-
-	Singleton<CGSWin32Parse>::Instance().InitCmdLineParam(strPDFPath, strPDFOutPath, m_hWnd);
-	Singleton<CGSWin32Parse>::Instance().PipeCmdLine();
-
-#endif
-
+	if (1 == m_uCompressMode)
+	{
+		//对PDF 压缩体积处理
+		Singleton<CPdfCompress>::Instance().SetProcessCallback(
+			[this](INT32 nCode,INT32 nVal,CString strOutInfo){	
+			if (0 == nCode || 1 == nCode)
+			{
+				CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
+				if (pProgress){
+					pProgress->SetValue(nVal);
+				}		
+				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
+				if (pParseTips){
+					pParseTips->SetText(strOutInfo);
+				}
+			}
+			else if (2 == nCode)  
+			{
+				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
+				if (pParseTips){
+					pParseTips->SetText(strOutInfo);
+				}
+			}
+		});
+		Singleton<CPdfCompress>::Instance().StartThread(strPDFPath, _T(""), strPDFOutPath);
+	}
+	else if (2 == m_uCompressMode)
+	{
+		Singleton<CGSWin32Parse>::Instance().SetProcessCallback(
+			[this](INT32 nCode, INT32 nVal, CString strOutInfo){
+			if (0 == nCode || 1 == nCode)
+			{
+				CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
+				if (pProgress){
+					pProgress->SetValue(nVal);
+				}
+				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
+				if (pParseTips){
+					pParseTips->SetText(strOutInfo);
+				}
+			}
+			else if (2 == nCode)
+			{
+				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
+				if (pParseTips){
+					pParseTips->SetText(strOutInfo);
+				}
+			}
+		});
+		Singleton<CGSWin32Parse>::Instance().InitCmdLineParam(strPDFPath, strPDFOutPath, m_hWnd);
+		Singleton<CGSWin32Parse>::Instance().PipeCmdLine();
+	}
 }
 
 
@@ -356,20 +385,3 @@ HRESULT CMainFrame::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, 
 {
 	return m_PaintManager.OnDrop(pDataObj, grfKeyState, pt, pdwEffect);
 }
-
-
-void CMainFrame::SetCompressProcess(INT32 i, INT32 j)
-{
-	if (0 == i && 0 == j)
-	{
-		Singleton<CPdfCompress>::Instance().ExistThread(false);
-		Singleton<CPdfCompress>::UnInstance();
-		return;
-	}
-	CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
-	if (pProgress)
-	{
-		pProgress->SetValue(i * 100/ j);
-	}
-}
-

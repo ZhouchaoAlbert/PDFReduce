@@ -5,13 +5,18 @@
 fz_context_s*  CGSWin32Parse::ctx = NULL;
 pdf_document* CGSWin32Parse::doc = NULL;
 
-CGSWin32Parse::CGSWin32Parse()
+CGSWin32Parse::CGSWin32Parse():
+m_hThread(nullptr)
 {
+	AddMsg(UM_GSWIN32_UI_TASK);
+	Start();
 }
 
 
 CGSWin32Parse::~CGSWin32Parse()
 {
+	ExistThread(true);
+	Stop();
 }
 
 
@@ -45,9 +50,6 @@ BOOL CGSWin32Parse::Init(ATL::CString strPdfPath, ATL::CString strPassword)
 		ATLASSERT(FALSE);
 		return FALSE;
 	}
-
-
-
 
 	m_uPagesCount = pdf_count_pages(doc);
 	return TRUE;
@@ -113,6 +115,11 @@ UINT32 CGSWin32Parse::PipeCmdLine()
 	return uiThreadId;
 }
 
+void CGSWin32Parse::SetProcessCallback(std::function<void(INT32 nCode, INT32 nVal, CString strOutInfo)>Func_CallBack)
+{
+	m_Func_CallBack = Func_CallBack;
+}
+
 UINT32 WINAPI  CGSWin32Parse::ThreadProc(void* pVoid)
 {
 	CGSWin32Parse *pThreadCallback = static_cast<CGSWin32Parse *>(pVoid);
@@ -127,6 +134,7 @@ UINT32 WINAPI  CGSWin32Parse::ThreadProc(void* pVoid)
 void CGSWin32Parse::Run(){
 	
 	static UINT32 uCurProcess = 1;
+	BOOL bRet = FALSE;
 	do
 	{
 		SECURITY_ATTRIBUTES sa;
@@ -179,11 +187,16 @@ void CGSWin32Parse::Run(){
 				UINT32 uFind = vecSplit[uIndex].Find(_T("Page"));
 				if (uFind == 0)
 				{
-					ST_PARSE_RESULT* pParseResult = new ST_PARSE_RESULT;
-					pParseResult->uProcess = uCurProcess * 100 / m_uPagesCount;
-					pParseResult->strLine = vecSplit[uIndex];
-					::PostMessage(m_hWnd, UM_GSWIN32_UI_TASK, (WPARAM)pParseResult, (LPARAM)0);
-					uCurProcess++;
+					CString strOutInfo;
+					strOutInfo.Format(_T("Prase:%s"), vecSplit[uIndex]);
+					JumpThreadSetProcess(1, uCurProcess++ * 100 / m_uPagesCount, strOutInfo);
+					bRet = TRUE;
+				}
+				UINT32 uFind2 = vecSplit[uIndex].Find(_T("Error:"));
+				if (uFind2 == 0)
+				{
+					bRet = FALSE;
+					break; 
 				}
 			}
 		}
@@ -192,12 +205,51 @@ void CGSWin32Parse::Run(){
 		CloseHandle(piProcInfo.hThread);
 	} while (0);
 
-	if (uCurProcess > 1)
-	{
-		ST_PARSE_RESULT* pParseResult = new ST_PARSE_RESULT;
-		pParseResult->uProcess = 100;
-		pParseResult->strLine = _T("Prase Sucess!");
-		::PostMessage(m_hWnd, UM_GSWIN32_UI_TASK, (WPARAM)pParseResult, (LPARAM)0);
-		uCurProcess = 1;
+	if (bRet){
+		JumpThreadSetProcess(0, 100, _T("Prase Sucess!"));
 	}
+	else{
+		JumpThreadSetProcess(3, 0, _T("Prase Fail!"));
+	}
+	uCurProcess = 1;
+}
+
+void CGSWin32Parse::OnMessage(UINT32 uMsgID, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (UM_GSWIN32_UI_TASK == uMsgID)
+	{
+		ST_PARSE_RESULT* stPraseResult = (ST_PARSE_RESULT*)(wParam);
+		if (NULL == stPraseResult)
+		{
+			return;
+		}
+		if (m_Func_CallBack)
+		{
+			m_Func_CallBack(stPraseResult->nCode, stPraseResult->nVal, stPraseResult->strOutInfo);
+		}
+		delete stPraseResult;
+	}
+}
+
+void CGSWin32Parse::JumpThreadSetProcess(INT32 nCode, INT32 nVal, CString strPraseInfo)
+{
+	ST_PARSE_RESULT* stPraseResult = new ST_PARSE_RESULT;
+	stPraseResult->nCode = nCode;
+	stPraseResult->nVal = nVal;
+	stPraseResult->strOutInfo = strPraseInfo;
+	::PostMessage(GetMsgWnd(), UM_GSWIN32_UI_TASK, (WPARAM)stPraseResult, (LPARAM)0);
+}
+
+
+void CGSWin32Parse::ExistThread(bool bForced)
+{
+	if (m_hThread)
+	{
+		if (bForced)
+			::TerminateThread(m_hThread, 0);
+		else
+			::WaitForSingleObject(m_hThread, INFINITE);
+		CloseHandle(m_hThread);
+	}
+	m_hThread = nullptr;
 }

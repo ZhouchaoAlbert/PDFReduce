@@ -107,6 +107,9 @@
     <ClInclude Include="Msg\UtilMsg.h">
       <Filter>头文件\Msg</Filter>
     </ClInclude>
+    <ClInclude Include="UserDefine.h">
+      <Filter>头文件\Help</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PDFReduce.rc">

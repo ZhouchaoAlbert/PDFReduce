@@ -19,12 +19,13 @@ m_doc(nullptr),
 
 m_hThread(nullptr)
 {
-	AddMsg(WM_UI_PROCESS);
+	AddMsg(WM_MYCOMPRESS_UI_TASK);
 	Start();
 }
 
 CPdfCompress::~CPdfCompress()
 {
+	ExistThread(true);
 	Stop();
 }
 
@@ -44,7 +45,7 @@ UINT32 CPdfCompress::StartThread(ATL::CString strPdfPath, ATL::CString strPasswo
 	return uiThreadID;
 }
 
-void CPdfCompress::SetProcessCallback(std::function<void(INT32 nVal)>Func_CallBack)
+void CPdfCompress::SetProcessCallback(std::function<void(INT32 nCode, INT32 nVal, CString strOutInfo)>Func_CallBack)
 {
 	m_Func_CallBack = Func_CallBack;
 }
@@ -72,16 +73,14 @@ void CPdfCompress::Run()
 //初始化操作
 BOOL CPdfCompress::Init(ATL::CString strPdfPath, ATL::CString strPassword)
 {
-	if (m_doc)
-	{
+	if (m_doc){
 		pdf_close_document(m_doc);
-		m_doc = nullptr;
 	}
-	if (m_ctx)
-	{
-		fz_free_context(m_ctx);
-		m_ctx = nullptr;
+	if (m_ctx){
+		fz_free_context(m_ctx);	
 	}
+	m_doc = nullptr;
+	m_ctx = nullptr;
 
 	if (strPdfPath.IsEmpty())
 	{
@@ -266,7 +265,6 @@ BOOL CPdfCompress::SavaImageAsJpg(INT32 nNum)
 	} 
 
 #endif
-	
 	pdf_xref_entry *entry = nullptr;
 	fz_buffer* fz_buf = nullptr;
 	UINT32 width = 0, height = 0, bpc =0;
@@ -411,7 +409,6 @@ BOOL CPdfCompress::IsCompressImageStream(pdf_document* doc, INT32 num, INT32 gen
 		//1.对buffer 数据解码
 		//2.位图+像素
 
-
 		return TRUE;
 	}
 	else if (FZ_IMAGE_LZW == fz_com_buffer->params.type)
@@ -449,9 +446,8 @@ void CPdfCompress::PraseImageTypeObj()
 		pdf_drop_obj(obj);
 	}
 
+	BOOL bPerfectPDF = TRUE;
 	static UINT32 uCurIndex = 1;
-
-
 	for (UINT32 uIndex = 0; uIndex < vecObjNum.size(); uIndex++)
 	{	
 		UINT32 uObjNum = vecObjNum[uIndex];
@@ -465,6 +461,7 @@ void CPdfCompress::PraseImageTypeObj()
 #if 1
 				if (IsWriteStream(uObjNum))
 				{
+					bPerfectPDF = FALSE;
 					pdf_obj  *obj = NULL;
 					obj = pdf_load_object(m_doc, uObjNum, 0);
 					WriteDataToStream(obj, strDestImage, uObjNum);
@@ -475,31 +472,37 @@ void CPdfCompress::PraseImageTypeObj()
 			DeleteFile(strDestImage);
 		}
 		//跳线程设置进度
-		JumpThreadSetProcess(uCurIndex++, vecObjNum.size());
+		CString strOutInfo;
+		strOutInfo.Format(_T("Prase image obj:%d"), uObjNum);
+		JumpThreadSetProcess(1, 100*(uCurIndex++) / vecObjNum.size(), strOutInfo);
 	}
 
-	fz_write_options ops = {0};
-	//ops.do_clean = 1;
-	ATL::CW2A szPdfOutPath(m_strPdfOutPath, CP_UTF8);
-	pdf_write_document(m_doc, (char*)szPdfOutPath, &ops);
+	if (bPerfectPDF)
+	{
+		CString strOutInfo;
+		strOutInfo.Format(_T("Perfect PDF！Not Need Prase!"));
+		JumpThreadSetProcess(2, 0, strOutInfo);
+	}
+	else
+	{
+		fz_write_options ops = { 0 };
+		ATL::CW2A szPdfOutPath(m_strPdfOutPath, CP_UTF8);
+		pdf_write_document(m_doc, (char*)szPdfOutPath, &ops);
 
-	fz_try(m_ctx)
-	{
-		if (m_doc)
-		{
-			pdf_close_document(m_doc);
-			m_doc = nullptr;
-		}
-		if (m_ctx)
-		{
-			fz_free_context(m_ctx);
-			m_ctx = nullptr;
-		}
+		CString strOutInfo;
+		strOutInfo.Format(_T("Prase Sucess!"));
+		JumpThreadSetProcess(0, 100, strOutInfo);
 	}
-	fz_catch(m_ctx)
-	{
-		UINT32 u = GetLastError();
+	if (m_doc){
+		pdf_close_document(m_doc);
 	}
+	if (m_ctx){
+		fz_free_context(m_ctx);
+	}
+	m_doc = nullptr;
+	m_ctx = nullptr;
+
+	
 	uCurIndex = 1;
 }
 
@@ -592,14 +595,18 @@ BOOL  CPdfCompress::WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImageP
 	//更新流
 	pdf_update_stream(m_doc, nNum, stm_buf);
 	fz_drop_buffer(m_ctx, stm_buf);
-	//delete[] buffer_dest;
+
 	return TRUE;
 }
 
 
-void CPdfCompress::JumpThreadSetProcess(INT32 nCurPos, INT32 nTotal)
+void CPdfCompress::JumpThreadSetProcess(INT32 nCode, INT32 nVal, CString strPraseInfo)
 {
-	::PostMessage(GetMsgWnd(), WM_UI_PROCESS, (WPARAM)nCurPos, (LPARAM)nTotal);
+	ST_PARSE_RESULT* stPraseResult = new ST_PARSE_RESULT;
+	stPraseResult->nCode = nCode;
+	stPraseResult->nVal = nVal;
+	stPraseResult->strOutInfo = strPraseInfo;
+	::PostMessage(GetMsgWnd(), WM_MYCOMPRESS_UI_TASK, (WPARAM)stPraseResult, (LPARAM)0);
 }
 
 void CPdfCompress::ExistThread(bool bForced)
@@ -617,13 +624,19 @@ void CPdfCompress::ExistThread(bool bForced)
 
 void CPdfCompress::OnMessage(UINT32 uMsgID, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (WM_UI_PROCESS == uMsgID)
+	if (WM_MYCOMPRESS_UI_TASK == uMsgID)
 	{
-		INT32 nVal = (wParam * 100 / lParam);
+
+		ST_PARSE_RESULT* stPraseResult = (ST_PARSE_RESULT*)(wParam);
+		if (NULL ==stPraseResult)
+		{
+			return;
+		}
 		if (m_Func_CallBack)
 		{
-			m_Func_CallBack(nVal);
+			m_Func_CallBack(stPraseResult->nCode,	stPraseResult->nVal,stPraseResult->strOutInfo);
 		}
+		delete stPraseResult;
 	}
 }
 

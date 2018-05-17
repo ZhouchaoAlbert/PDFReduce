@@ -4,9 +4,8 @@
 #include "MyLock.h"
 #include "Msg\UtilMsg.h"
 #include <functional>
+#include "UserDefine.h"
 
-
-#define  WM_UI_PROCESS WM_USER + 1000
 
 extern "C"
 {
@@ -25,7 +24,7 @@ public:
 		return &obj;
 	}
 	UINT32 StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath);
-	void SetProcessCallback(std::function<void(INT32 nVal)>Func_CallBack);
+	void SetProcessCallback(std::function<void(INT32 nCode, INT32 nVal, CString strOutInfo)>Func_CallBack);
 	//退出线程
 	void ExistThread(bool bForced);
 protected:
@@ -65,7 +64,7 @@ private:
 	// 线程回调
 	static UINT WINAPI  ThreadProc(void* pVoid);
 	void Run();
-	void JumpThreadSetProcess(INT32 nCurPos, INT32 nTotal);
+	void JumpThreadSetProcess(INT32 nCode,INT32 nVal,CString strPraseInfo);
 
 private:
 	ATL::CString m_strPdfPath;
@@ -75,6 +74,6 @@ private:
 	pdf_document* m_doc; 
 	HANDLE   m_hThread;
 	CCritSec m_CritSec;
-	std::function<void(int nVal)>m_Func_CallBack;
+	std::function<void(INT32 nCode,INT32 nVal,CString strOutInfo)>m_Func_CallBack;
 };
 

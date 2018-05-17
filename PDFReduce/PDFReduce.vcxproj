@@ -118,6 +118,7 @@
     <ClInclude Include="MyLock.h" />
     <ClInclude Include="PdfCompress.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="UserDefine.h" />
     <ClInclude Include="UtilImage.h" />
     <ClInclude Include="MainFrame.h" />
     <ClInclude Include="UtilMuPdf.h" />

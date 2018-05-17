@@ -7,6 +7,7 @@
 	<Font name="微软雅黑" size="12" underline="true"/>
 	<Default name="VScrollBar" value="showbutton1=&quot;false&quot; showbutton2=&quot;false&quot; width=&quot;7&quot; thumbnormalimage=&quot;file='material/scrollbar.png' source='14,0,21,39' corner='2,10,2,10'&quot; thumbhotimage=&quot;file='material/scrollbar.png' source='21,0,28,39' corner='2,10,2,10'&quot; thumbpushedimage=&quot;file='material/scrollbar.png' source='21,0,28,39' corner='2,10,2,10'&quot; bknormalimage=&quot;file='material/scrollbar.png' source='0,0,7,39' corner='2,10,2,10'&quot; bkhotimage=&quot;file='material/scrollbar.png' source='7,0,14,39' corner='2,10,2,10'&quot; bkpushedimage=&quot;file='material/scrollbar.png' source='7,0,14,39' corner='2,10,2,10'&quot;" />
 	<Default name="Edit" value="normalimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,0,107,30'&quot; hotimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,31,107,61'&quot; pushedimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,62,116,92'&quot; focusedimage=&quot;file='material/editbkimage.png' corner='5,5,5,5' source='0,62,116,92'&quot;"/>
+	<Default name="Combo"  value="itemselectedbkcolor=&quot;#FF2d87ed&quot; itemhotbkcolor=&quot;#FF2d87ed&quot; itemhottextcolor=&quot;#FF000000&quot; itemtextpadding=&quot;5,0,0,0&quot; textcolor=&quot;#FFFF0000&quot; normalimage=&quot;file='material/comb.png' corner='5,5,5,5' source='0,0,97,22'&quot; hotimage=&quot;file='material/comb.png' corner='5,5,5,5' source='0,23,97,45'&quot; pushedimage=&quot;file='material/comb.png' corner='5,5,5,5' source='0,23,97,45'&quot;"/>
 
 	<VerticalLayout bkcolor="#FFFFFFFF"  >
 		<!--标题栏-->
@@ -60,8 +61,13 @@
 						<Control height="10" />
 					
 						<HorizontalLayout height="30"  padding="10,0,0,0" >
-							<Progress name="progress"  width="480"   height="5" bkcolor="#FFDEDEDE" disabledtextcolor="#FFA7A6AA" align="center" foreimage="Material\progressbar.png"  min="0" max="100" value="0" hor="true"/>
-							<Control />
+							<Progress name="progress"   height="5" bkcolor="#FFDEDEDE" disabledtextcolor="#FFA7A6AA" align="center" foreimage="Material\progressbar.png"  min="0" max="100" value="0" hor="true"/>
+							<Control width="10" />
+							<Combo name="comb_group" width="150" dropboxsize="0,50" height="30" textpadding="5,2,21,2" itemtextpadding="5,0,0,0" arrowwidth="32" normalarrow="material/down.png" droparrow="material/up.png">
+								<ListLabelElement  name="comb_my_compress" text="针对图片压缩模式" selected="true" height="25" />
+								<ListLabelElement name="comb_gswin32_compress" text="GSWin32压缩模式" height="25" />
+							</Combo>
+							<Control width="10" />
 							<Button name="btn_open_pdf_compress" width="100" bkimage="file='material/btn_start_compress.png' corner='5,5,5,5'" />
 							<Control width="10" />
 						</HorizontalLayout>		
