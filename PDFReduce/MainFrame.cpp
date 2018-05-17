@@ -246,13 +246,14 @@ void CMainFrame::StartPDFCompress()
 					pParseTips->SetText(strOutInfo);
 				}
 			}
-			else if (2 == nCode)
+			else if (2 == nCode || 3 == nCode)
 			{
 				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
 				if (pParseTips){
 					pParseTips->SetText(strOutInfo);
 				}
 			}
+			
 		});
 		Singleton<CGSWin32Parse>::Instance().InitCmdLineParam(strPDFPath, strPDFOutPath, m_hWnd);
 		Singleton<CGSWin32Parse>::Instance().PipeCmdLine();
