@@ -1,6 +1,10 @@
 #pragma once
 #include <atlstr.h>
 #include <string>
+#include "MyLock.h"
+#include "Msg\UtilMsg.h"
+#include <functional>
+
 
 #define  WM_UI_PROCESS WM_USER + 1000
 
@@ -10,7 +14,7 @@ extern "C"
 #include <mupdf/fitz.h>
 }
 
-class CPdfCompress
+class CPdfCompress : public Util::Msg::CMsgBase
 {
 public:
 	CPdfCompress();
@@ -20,7 +24,10 @@ public:
 		static CPdfCompress obj;
 		return &obj;
 	}
-	UINT32 StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath, HWND hWnd);
+	UINT32 StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath);
+	void SetProcessCallback(std::function<void(INT32 nVal)>Func_CallBack);
+	//退出线程
+	void ExistThread(bool bForced);
 protected:
 	//初始化操作
 	BOOL Init(ATL::CString strPdfPath = _T(""), ATL::CString strPassword = _T(""));
@@ -51,18 +58,23 @@ protected:
 	//数据回写
 	BOOL WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImagePath, INT32 nNum);
 
+
+	//消息
+	virtual void OnMessage(UINT32 uMsgID, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 private:
 	// 线程回调
 	static UINT WINAPI  ThreadProc(void* pVoid);
 	void Run();
 	void JumpThreadSetProcess(INT32 nCurPos, INT32 nTotal);
-	BOOL ImageSizeCompare(CString strSrcIamge, CString strDestImage);
+
 private:
 	ATL::CString m_strPdfPath;
 	ATL::CString m_strPassword;
 	ATL::CString m_strPdfOutPath;
-	HWND m_hWnd;
 	fz_context_s* m_ctx; 
 	pdf_document* m_doc; 
+	HANDLE   m_hThread;
+	CCritSec m_CritSec;
+	std::function<void(int nVal)>m_Func_CallBack;
 };
 

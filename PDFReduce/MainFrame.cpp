@@ -199,10 +199,28 @@ void CMainFrame::StartPDFCompress()
 		::MessageBox(m_hWnd, _T("输出的不是PDF文件，请重新输入!"), _T("提示"), MB_OK);
 		return;
 	}
-	
+	CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
+	if (pProgress)
+	{
+		pProgress->SetValue(0);
+	}
 #if 1
 	//对PDF 压缩体积处理
-	Util::MuPdf::StartPdfCompress(strPDFPath, _T(""), strPDFOutPath, m_hWnd);
+	Singleton<CPdfCompress>::Instance().SetProcessCallback(
+		[this](int nVal){
+		CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
+		if (pProgress)
+		{
+			pProgress->SetValue(nVal);
+		}
+		if (nVal ==100)
+		{
+			//Singleton<CPdfCompress>::Instance().ExistThread(false);
+			//Singleton<CPdfCompress>::UnInstance();
+		}
+	});
+	Singleton<CPdfCompress>::Instance().StartThread(strPDFPath, _T(""), strPDFOutPath);
+
 #else
 
 	Singleton<CGSWin32Parse>::Instance().InitCmdLineParam(strPDFPath, strPDFOutPath, m_hWnd);
@@ -342,6 +360,12 @@ HRESULT CMainFrame::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, 
 
 void CMainFrame::SetCompressProcess(INT32 i, INT32 j)
 {
+	if (0 == i && 0 == j)
+	{
+		Singleton<CPdfCompress>::Instance().ExistThread(false);
+		Singleton<CPdfCompress>::UnInstance();
+		return;
+	}
 	CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
 	if (pProgress)
 	{

@@ -99,6 +99,9 @@
   <ItemGroup>
     <ClCompile Include="DropTarget\DropTargetReal.cpp" />
     <ClCompile Include="GSWin32Parse.cpp" />
+    <ClCompile Include="Msg\MsgObject.cpp" />
+    <ClCompile Include="Msg\MsgObjectMgr.cpp" />
+    <ClCompile Include="Msg\UtilMsg.cpp" />
     <ClCompile Include="PdfCompress.cpp" />
     <ClCompile Include="UtilImage.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -109,6 +112,10 @@
   <ItemGroup>
     <ClInclude Include="DropTarget\DropTargetReal.h" />
     <ClInclude Include="GSWin32Parse.h" />
+    <ClInclude Include="Msg\MsgObject.h" />
+    <ClInclude Include="Msg\MsgObjectMgr.h" />
+    <ClInclude Include="Msg\UtilMsg.h" />
+    <ClInclude Include="MyLock.h" />
     <ClInclude Include="PdfCompress.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="UtilImage.h" />
