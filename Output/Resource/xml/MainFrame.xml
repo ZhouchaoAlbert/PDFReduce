@@ -68,7 +68,7 @@
 								<ListLabelElement name="comb_gswin32_compress" text="GSWin32压缩模式" height="25" />
 							</Combo>
 							<Control width="10" />
-							<Button name="btn_open_pdf_compress" width="100" bkimage="file='material/btn_start_compress.png' corner='5,5,5,5'" />
+							<Button name="btn_open_pdf_compress" width="100"  bkimage="file='material/btn_start_compress.png' corner='5,5,5,5'" />
 							<Control width="10" />
 						</HorizontalLayout>		
 						<Control height="10" />

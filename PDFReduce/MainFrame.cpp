@@ -170,6 +170,15 @@ BOOL IsFileExist(const CString& csFile)
 
 void CMainFrame::StartPDFCompress()
 {
+	CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+	UINT32 uTag = pStartCompress->GetTag();
+	if (1 == uTag)
+	{
+		MessageBox(NULL, _T("PDF压缩任务还在执行,请不要重入!"), _T("提示"), MB_OK);
+		return;
+	}
+	pStartCompress->SetTag(1);
+
 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
 	ATL::CString strPDFPath = pEdit->GetText();
 	if (strPDFPath.IsEmpty())
@@ -212,6 +221,10 @@ void CMainFrame::StartPDFCompress()
 			[this](INT32 nCode,INT32 nVal,CString strOutInfo){	
 			if (0 == nCode || 1 == nCode)
 			{
+				if (0 == nCode){
+					CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+					if (pStartCompress)pStartCompress->SetTag(0);
+				}
 				CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
 				if (pProgress){
 					pProgress->SetValue(nVal);
@@ -223,6 +236,9 @@ void CMainFrame::StartPDFCompress()
 			}
 			else if (2 == nCode)  
 			{
+				CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+				if (pStartCompress)pStartCompress->SetTag(0);
+				
 				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
 				if (pParseTips){
 					pParseTips->SetText(strOutInfo);
@@ -237,6 +253,10 @@ void CMainFrame::StartPDFCompress()
 			[this](INT32 nCode, INT32 nVal, CString strOutInfo){
 			if (0 == nCode || 1 == nCode)
 			{
+				if (0 == nCode){
+					CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+					if (pStartCompress)pStartCompress->SetTag(0);
+				}
 				CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
 				if (pProgress){
 					pProgress->SetValue(nVal);
@@ -248,6 +268,9 @@ void CMainFrame::StartPDFCompress()
 			}
 			else if (2 == nCode || 3 == nCode)
 			{
+				CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+				if (pStartCompress)pStartCompress->SetTag(0);
+
 				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
 				if (pParseTips){
 					pParseTips->SetText(strOutInfo);
