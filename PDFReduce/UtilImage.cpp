@@ -139,7 +139,7 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 	if (uBpc == 4)
 	{
 		LONG lLineBytes24 = ((width * 24 + 31) / 32 * 4);  //¶ÔÆë
-		LONG lLineBytes4 = ((width * 4 + 31) / 32 * 4);		//¶ÔÆë
+		LONG lLineBytes4 = ((width * 4 + 7) / 8 * 1);		//¶ÔÆë
 		try
 		{
 			dstImage = new UINT8[lLineBytes24* height];
@@ -153,20 +153,20 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 			return nullptr;
 		}
 		
-		int n, j;
-		for (int i = 0; i < height; i++)
+		INT32 n, j;
+		for (INT32 i = 0; i < height; i++)
 		{
 			for (j = 0, n = 0; j < lLineBytes4; j++, n++)
 			{
-				BYTE gray = *(bmpData + lLineBytes4 /*width*/*i + j);
+				UINT8 px = *(bmpData + lLineBytes4 /*width*/*i + j);
 
 				UINT8 lo4, hi4;
-				hi4 = (gray & 0xf0) >> 4;
-				lo4 = gray & 0x0f;
+				hi4 = (px & 0xf0) >> 4;
+				lo4 =  px & 0x0f;
 				hi4 |= 0xff & (hi4 << 4);
 				lo4 |= 0xff & (lo4 << 4);
 
-				*(dstImage + lLineBytes24*i + n) = lo4;  //BGR
+				*(dstImage + lLineBytes24*i + n) = lo4; //BGR
 				n++;
 				*(dstImage + lLineBytes24*i + n) = lo4;	//BGR
 				n++;
@@ -189,11 +189,11 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 		//RGB  To  BGR
 		UINT8 *bmpDataOut = bmpData;
 		bool is_grayscale = true;
-		for (int y = 0; y < height; y++)
+		for (INT32 y = 0; y < height; y++)
 		{
 			UINT8 *in = bmpData + y * stride;
 			UINT8 green = 0, blue = 0;
-			for (int x = 0; x < width; x++)
+			for (INT32 x = 0; x < width; x++)
 			{
 				is_grayscale = is_grayscale && in[0] == in[1] && in[0] == in[2];
 				blue = *in++;
