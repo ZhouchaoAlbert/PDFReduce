@@ -51,7 +51,7 @@ void CMainFrame::InitWindow()
 	m_pHorFileList = static_cast<CHorizontalLayoutUI*>(m_PaintManager.FindControl(_T("hor_file_list")));
 	m_pHorFileDrop = static_cast<CHorizontalLayoutUI*>(m_PaintManager.FindControl(_T("hor_file_drop")));
 	m_pFileList = static_cast<CListUI*>(m_PaintManager.FindControl(_T("file_list")));
-
+	
 
 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
 	if (pEdit)pEdit->SetText(_T("E:\\test\\convert\\Desert.pdf"));
@@ -172,14 +172,14 @@ BOOL IsFileExist(const CString& csFile)
 
 void CMainFrame::StartPDFCompress()
 {
-	CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
-	UINT32 uTag = pStartCompress->GetTag();
-	if (1 == uTag)
-	{
-		MessageBox(NULL, _T("PDF压缩任务还在执行,请不要重入!"), _T("提示"), MB_OK);
-		return;
-	}
-	pStartCompress->SetTag(1);
+// 	CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+// 	UINT32 uTag = pStartCompress->GetTag();
+// 	if (1 == uTag)
+// 	{
+// 		MessageBox(NULL, _T("PDF压缩任务还在执行,请不要重入!"), _T("提示"), MB_OK);
+// 		return;
+// 	}
+// 	pStartCompress->SetTag(1);
 
 	CString strPDFOutFolder;
 	CEditUI* pOutPath = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
@@ -207,13 +207,35 @@ void CMainFrame::StartPDFCompress()
 
 		//对PDF 压缩体积处理
 		Singleton<CPdfCompressEx>::Instance().SetProcessCallback(
-			[this](INT32 nCode, INT32 nId,INT32 nVal, CString strOutInfo){
+			[this](INT32 nCode, CString strPdfInPath, INT32 nVal, CString strOutInfo){
 
-			CListContainerElementUI* pItem = (CListContainerElementUI*)m_pFileList->GetItemAt(nId);
-			if (NULL == pItem){
+			CListContainerElementUI* pItem2 = NULL;
+			BOOL bOk = FALSE;
+			for (UINT32 uIndex2 = 0; uIndex2 < m_pFileList->GetCount(); uIndex2++)
+			{
+				pItem2 = (CListContainerElementUI*)m_pFileList->GetItemAt(uIndex2);
+				if (NULL == pItem2){
+					continue;
+				}
+				CControlUI* pNode = (CControlUI*)pItem2->GetTag();
+				if (NULL == pNode){
+					continue;
+				}
+				CString strPDFPath = pNode->GetText();
+				if (0 == strPDFPath.CompareNoCase(strPdfInPath))
+				{
+					bOk = TRUE;
+					break;
+				}
+
+			}
+
+			if (FALSE == bOk){
 				return;
 			}
-			CLabelUI* pLabel = (CLabelUI*)pItem->FindSubControl(_T("lab_state"));
+
+
+			CLabelUI* pLabel = (CLabelUI*)pItem2->FindSubControl(_T("lab_state"));
 
 			if (E_PDFCOMPRESS_STATE_FINISH == nCode)
 			{
@@ -408,16 +430,16 @@ LRESULT CMainFrame::OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	POINT point;
 	::GetCursorPos(&point);
 	ScreenToClient(m_hWnd, &point);
-	CControlUI* pControlUI = static_cast<CControlUI*>(m_PaintManager.FindControl(point));
-	if (NULL == pControlUI)
-	{
-		return S_OK;
-	}
-	CString strName = pControlUI->GetName();
-	if (0 != strName.CompareNoCase(_T("btn_drop")))
-	{
-		return S_OK;
-	}
+// 	CControlUI* pControlUI = static_cast<CControlUI*>(m_PaintManager.FindControl(point));
+// 	if (NULL == pControlUI)
+// 	{
+// 		return S_OK;
+// 	}
+// 	CString strName = pControlUI->GetName();
+// 	if (0 != strName.CompareNoCase(_T("btn_drop")))
+// 	{
+// 		return S_OK;
+// 	}
 
 
 	BOOL bIsCopyFile = (BOOL)lParam;
@@ -458,9 +480,6 @@ HRESULT CMainFrame::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, 
 
 CListContainerElementUI* CMainFrame::GetListItem(ST_LISTITEM_INFO item)
 {
-
-	static UINT32 uId = 0;
-
 	CListContainerElementUI* pItem = new CListContainerElementUI;
 	pItem->SetFixedHeight(40);
 	pItem->SetBottomBorderSize(2);
@@ -469,7 +488,6 @@ CListContainerElementUI* CMainFrame::GetListItem(ST_LISTITEM_INFO item)
 	CControlUI* pNode = new CControlUI();
 	if (pNode){
 		pNode->SetText(item.strPDFPath);
-		pNode->SetTag(uId++);
 	}
 	pItem->SetTag((UINT_PTR)pNode);
 

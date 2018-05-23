@@ -39,9 +39,8 @@
 			<!--分割条-->
 			<Label width="1" bkcolor="#FFE5E5E5"/>
 			<!--右边设置树-->
-			<TabLayout name="tab_tree_list">
-				<VerticalLayout name="ver_reduce_layout" inset="10,5,5,0" vscrollbar="true" >
-			
+			<TabLayout name="tab_tree_list" >
+				<VerticalLayout name="ver_reduce_layout" inset="10,5,5,0">
 					<VerticalLayout >
 						<HorizontalLayout height="36" padding="10,0,0,0" >
 					
@@ -50,25 +49,15 @@
 						</HorizontalLayout>
 						<Control height="10" />
 					
-						<HorizontalLayout name="hor_file_list" visible="false" padding="10,0,10,0"  bordercolor="#FF999999" bordersize="1" > 
-							<List name="file_list" inset="5,5,5,5" itembkcolor="#FFFFFFFF" itemselectedtextcolor="#FFFFFFFF" itemselectedbkcolor="#FFebebeb" itemhotbkcolor="#FFF2F2F2" >
+						<HorizontalLayout name="hor_file_list" visible="false"  padding="10,0,10,0"  bordercolor="#FF999999" bordersize="1" > 
+							<List name="file_list"  vscrollbar="true" hscrollbar="true" itembkcolor="#FFFFFFFF" itemselectedtextcolor="#FFFFFFFF" itemselectedbkcolor="#FFebebeb" itemhotbkcolor="#FFF2F2F2" >
 								<ListHeader height="40" menu="true" bottombordersize="2" bordercolor="#FFe6e6e6">
-						
 									<ListHeaderItem text="文件名"  width="150" align="left"  dragable="false" />
 									<Control width="1" bkcolor="#FFD7D7D7"/>
 									<ListHeaderItem text="文件大小"   width="150" align="left" dragable="false" />
 									<Control width="1" bkcolor="#FFD7D7D7"/>
 									<ListHeaderItem text="文件状态"   width="150" align="left"  dragable="false" />
-										
 								</ListHeader>
-								 <!--ListHeader height="40" bkcolor="#FFE6ECF7" bordersize="1" bordercolor="#FFD7D7D7">
-									<ListHeaderItem text="文件名"  width="150" align="left" textpadding="15,0,0,0" />
-									<Control width="1" bkcolor="#FFD7D7D7"/>
-									<ListHeaderItem text="文件大小"   width="150" align="left" textpadding="15,0,0,0" />
-									<Control width="1" bkcolor="#FFD7D7D7"/>
-									<ListHeaderItem text="文件状态"   width="150" align="left" textpadding="15,0,0,0" />
-									<Control width="1" bkcolor="#FFD7D7D7"/>
-								</ListHeader-->
 							</List>
 						</HorizontalLayout>
 					

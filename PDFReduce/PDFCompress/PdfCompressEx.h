@@ -22,6 +22,7 @@ struct ST_PDFINFO_NODE
 {
 	INT32   nId;						//唯一标示  id递增
 	CString strPdfInPath;				//输入PDF路径 
+	CString strPassword;
 	CString strPdfOutFolder;			//输出PDF文件夹
 };
 
@@ -35,7 +36,7 @@ enum E_PDFCOMPRESS_STATE
 
 struct ST_COMPRESS_RESULT
 {
-	INT32					nId;		//唯一标示
+	CString					strPdfInPath;//唯一标示
 	E_PDFCOMPRESS_STATE     eState;		//压缩状态
 	INT32					nVal;		//进度值
 	CString					strOutInfo; //输出信息
@@ -54,7 +55,7 @@ public:
 	UINT32 StartCompress();
 
 	//设置进度回调
-	void  SetProcessCallback(std::function<void(INT32 nCode, INT32 nId, INT32 nVal, CString strOutInfo)>Func_CallBack);
+	void  SetProcessCallback(std::function<void(INT32 nCode, CString strPdfInPath, INT32 nVal, CString strOutInfo)>Func_CallBack);
 	//退出线程
 	void ExistThread(bool bForce);
 
@@ -72,7 +73,7 @@ protected:
 	BOOL IsFlateDecode(pdf_obj* dict);
 
 	//解析资源图片
-	void PraseImageTypeObj(INT32 nId,CString strPdfOutPath);
+	void PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPath);
 	//保存图片PNG
 	BOOL SaveImageAsPng(ATL::CString strImagePath, INT32 nNum);
 	//保存图片格式
@@ -93,7 +94,7 @@ protected:
 	//执行线程
 	virtual void Run();
 	//跳线程
-	void JumpThreadSetProgress(INT32 nId, E_PDFCOMPRESS_STATE eState, INT32 nVal, CString strOutInfo);
+	void JumpThreadSetProgress(CString strPdfInPath, E_PDFCOMPRESS_STATE eState, INT32 nVal, CString strOutInfo);
 
 	IMPLEMENT_REFCOUNT(CPdfCompressEx);
 private:
@@ -106,7 +107,7 @@ private:
 
 
 
-	std::function<void(INT32 nCode, INT32 nId,INT32 nVal, CString strOutInfo)>m_Func_CallBack;
+	std::function<void(INT32 nCode, CString strPdfInPath, INT32 nVal, CString strOutInfo)>m_Func_CallBack;
 };
 
 #endif

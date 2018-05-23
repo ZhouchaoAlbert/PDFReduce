@@ -38,7 +38,6 @@ UINT32 CPdfCompressEx::StartCompress()
 {
 	if (m_bRun)
 	{
-		ATLASSERT(FALSE);
 		return 0;
 	}
 	if (!Util::Path::IsFileExist(Util::Path::GetImageTempPath(FALSE)))
@@ -59,7 +58,7 @@ UINT32 CPdfCompressEx::StartCompress()
 	return m_uThreadId;
 }
 
-void CPdfCompressEx::SetProcessCallback(std::function<void(INT32 nCode, INT32 nId, INT32 nVal, CString strOutInfo)>Func_CallBack)
+void CPdfCompressEx::SetProcessCallback(std::function<void(INT32 nCode, CString strPdfInPath, INT32 nVal, CString strOutInfo)>Func_CallBack)
 {
 	m_Func_CallBack = Func_CallBack;
 }
@@ -283,6 +282,7 @@ BOOL CPdfCompressEx::SavaImageAsJpg(INT32 nNum)
 	}
 	fz_catch(m_ctx)
 	{
+		ATLASSERT(FALSE);
 		UINT32 u = GetLastError();
 		return FALSE;
 	}
@@ -303,6 +303,7 @@ BOOL CPdfCompressEx::SavaImageAsJpg(INT32 nNum)
 
 	CxImage ximage((UINT8*)bmpBuffer, uSizeOut, CXIMAGE_FORMAT_BMP);
 	if (!ximage.IsValid()){
+		ATLASSERT(FALSE);
 		return FALSE;
 	}
 
@@ -356,19 +357,27 @@ BOOL CPdfCompressEx::IsWriteStream(INT32 nNum)
 }
 
 //解析资源信息
-void CPdfCompressEx::PraseImageTypeObj(INT32 nId, CString strPdfOutPath)
+void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPath)
 {
 	std::vector<UINT32> vecObjNum;
 	UINT32 uObjNums = pdf_count_objects(m_doc);
 	for (UINT32 uIndex = 1; uIndex < uObjNums; uIndex++)
 	{
-		pdf_obj  *obj;
-		obj = pdf_load_object(m_doc, uIndex, 0);
-		if (IsImageType(obj) && IsFlateDecode(obj))
- 		{
-			vecObjNum.push_back(uIndex);
- 		}
-		pdf_drop_obj(obj);
+		fz_try(m_ctx)
+		{
+			pdf_obj  *obj;
+			obj = pdf_load_object(m_doc, uIndex, 0);
+			if (IsImageType(obj) && IsFlateDecode(obj))
+			{
+				vecObjNum.push_back(uIndex);
+			}
+			pdf_drop_obj(obj);
+		}
+		fz_catch(m_ctx)
+		{
+			//ATLASSERT(FALSE);
+			UINT32 u = GetLastError();
+		}
 	}
 
 	BOOL bPerfectPDF = TRUE;
@@ -396,14 +405,14 @@ void CPdfCompressEx::PraseImageTypeObj(INT32 nId, CString strPdfOutPath)
 		//跳线程设置进度
 		CString strOutInfo;
 		strOutInfo.Format(_T("Prase image obj:%d"), uObjNum);
-		JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_PRASE, 100 * (uCurIndex++) / vecObjNum.size(), strOutInfo);
+		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_PRASE, 100 * (uCurIndex++) / vecObjNum.size(), strOutInfo);
 	}
 
 	if (bPerfectPDF)
 	{
 		CString strOutInfo;
 		strOutInfo.Format(_T("Perfect PDF！Not Need Prase!"));
-		JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_PERFECT, 0, strOutInfo);
+		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_PERFECT, 0, strOutInfo);
 	}
 	else
 	{
@@ -413,7 +422,7 @@ void CPdfCompressEx::PraseImageTypeObj(INT32 nId, CString strPdfOutPath)
 
 		CString strOutInfo;
 		strOutInfo.Format(_T("Prase Sucess!"));
-		JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_FINISH, 100, strOutInfo);
+		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_FINISH, 100, strOutInfo);
 	}
 	if (m_doc){
 		pdf_close_document(m_doc);
@@ -503,10 +512,10 @@ BOOL  CPdfCompressEx::WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImag
 }
 
 
-void CPdfCompressEx::JumpThreadSetProgress(INT32 nId, E_PDFCOMPRESS_STATE eState, INT32 nVal, CString strOutInfo)
+void CPdfCompressEx::JumpThreadSetProgress(CString strPdfInPath, E_PDFCOMPRESS_STATE eState, INT32 nVal, CString strOutInfo)
 {
 	ST_COMPRESS_RESULT* stCompressResult = new ST_COMPRESS_RESULT;
-	stCompressResult->nId = nId;
+	stCompressResult->strPdfInPath = strPdfInPath;
 	stCompressResult->eState = eState;
 	stCompressResult->nVal = nVal;
 	stCompressResult->strOutInfo = strOutInfo;
@@ -526,7 +535,7 @@ void CPdfCompressEx::OnMessage(UINT32 uMsgID, WPARAM wParam, LPARAM lParam, BOOL
 		}
 		if (m_Func_CallBack)
 		{
-			m_Func_CallBack(stCompressResult->eState, stCompressResult->nId,stCompressResult->nVal, stCompressResult->strOutInfo);
+			m_Func_CallBack(stCompressResult->eState, stCompressResult->strPdfInPath,stCompressResult->nVal, stCompressResult->strOutInfo);
 		}
 		delete stCompressResult;
 	}
@@ -556,19 +565,18 @@ void CPdfCompressEx::Run()
 		m_TaskList.erase(it);
 		m_CritSec.Unlock();
 		
-		INT32	nId				= itPdfInfoNode.nId;
 		CString strPdfInPath	= itPdfInfoNode.strPdfInPath;
 		CString strPdfOutFolder = itPdfInfoNode.strPdfOutFolder;
-
+		CString strPassword     = itPdfInfoNode.strPassword;
 		CString strPdfOutPath = Util::Path::GetPDFOutPath(strPdfInPath, strPdfOutFolder);
-		if (DocumentInit(strPdfInPath, _T("")))
+		if (DocumentInit(strPdfInPath, strPassword))
 		{
-			PraseImageTypeObj(nId,strPdfOutPath);
+			PraseImageTypeObj(strPdfInPath, strPdfOutPath);
 		}
 		else
 		{
 			//通知该PDF文档初始化失败
-			JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_FAIL, 0, _T("DocumentInit is Fail"));
+			JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_FAIL, 0, _T("DocumentInit is Fail"));
 		}
 		Sleep(1);
 	}

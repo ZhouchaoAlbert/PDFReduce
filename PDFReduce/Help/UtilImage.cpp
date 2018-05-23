@@ -145,11 +145,13 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 			dstImage = new UINT8[lLineBytes24* height];
 			if (nullptr == dstImage)
 			{
+				ATLASSERT(FALSE);
 				return nullptr;
 			}
 		}
 		catch (const std::bad_alloc& e)
 		{
+			ATLASSERT(FALSE);
 			return nullptr;
 		}
 		
@@ -158,6 +160,11 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 		{
 			for (j = 0, n = 0; j < lLineBytes4; j++, n++)
 			{
+				if (lLineBytes4 *i + j > uLen)
+				{
+					ATLASSERT(FALSE);
+					return nullptr;
+				}
 				UINT8 px = *(bmpData + lLineBytes4 /*width*/*i + j);
 
 				UINT8 lo4, hi4;
@@ -187,22 +194,31 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 	{
 		//1.流中图像的点阵数据是BGR的 组装位图时 必须把图转为RGB   24 位
 		//RGB  To  BGR
-		UINT8 *bmpDataOut = bmpData;
-		bool is_grayscale = true;
-		for (INT32 y = 0; y < height; y++)
+		try
 		{
-			UINT8 *in = bmpData + y * stride;
-			UINT8 green = 0, blue = 0;
-			for (INT32 x = 0; x < width; x++)
+			UINT8 *bmpDataOut = bmpData;
+			bool is_grayscale = true;
+			for (INT32 y = 0; y < height; y++)
 			{
-				is_grayscale = is_grayscale && in[0] == in[1] && in[0] == in[2];
-				blue = *in++;
-				green = *in++;
-				*bmpDataOut++ = *in++;
-				*bmpDataOut++ = green;
-				*bmpDataOut++ = blue;
+				UINT8 *in = bmpData + y * stride;
+				UINT8 green = 0, blue = 0;
+				for (INT32 x = 0; x < width; x++)
+				{
+					is_grayscale = is_grayscale && in[0] == in[1] && in[0] == in[2];
+					blue = *in++;
+					green = *in++;
+					*bmpDataOut++ = *in++;
+					*bmpDataOut++ = green;
+					*bmpDataOut++ = blue;
+				}
 			}
 		}
+		catch (const std::bad_alloc& e)
+		{
+			ATLASSERT(FALSE);
+			return nullptr;
+		}
+
 	}
 
 #if 1
@@ -249,10 +265,15 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 	{
 		bmpBuffer = new UINT8[uBmpFileLen];
 		if (!bmpBuffer)
+		{
+			ATLASSERT(FALSE);
 			return nullptr;
+		}
+	
 	}
 	catch (const std::bad_alloc& e)
 	{
+		ATLASSERT(FALSE);
 		return nullptr;
 	}
 
@@ -286,11 +307,3 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 	return bmpBuffer;
 }
 
-/*
-CxImage image(bmpBuf, bmpBytesOut, CXIMAGE_FORMAT_BMP);
-if (image.IsValid())
-{
-image.SetJpegQuality(50);
-image.Save(_T("E:\\test\\convert\\bitmap.jpg"), CXIMAGE_FORMAT_JPG);
-}
-*/
