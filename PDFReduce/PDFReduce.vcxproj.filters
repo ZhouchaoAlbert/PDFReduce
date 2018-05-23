@@ -16,23 +16,20 @@
     <Filter Include="头文件\Frame">
       <UniqueIdentifier>{d1050451-9f77-4a3f-a13e-bce7a244c00c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\Ximage">
-      <UniqueIdentifier>{6cf6649b-6f02-49b4-881c-45507036608e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\Mupdf">
-      <UniqueIdentifier>{f55ce26d-3c67-4dbb-8de5-22a97add3a3e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\Help">
       <UniqueIdentifier>{90209be7-55fe-4049-acf1-70f9fd596f91}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\DropTarget">
-      <UniqueIdentifier>{33fea4d4-9532-4dc4-968d-497e36610bdc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\gswin32c">
-      <UniqueIdentifier>{5fd8a48b-1c49-4ea5-bb23-79b6a2101672}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\Msg">
       <UniqueIdentifier>{11bcdd67-3309-4792-814d-882e15764361}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Thread">
+      <UniqueIdentifier>{1dd1b3fb-f8aa-4ffb-a649-902b12ad9ed2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Base">
+      <UniqueIdentifier>{c1f994c2-5f41-4988-a4a0-92a4287eeedd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\PDFCompress">
+      <UniqueIdentifier>{944b9c79-c193-46a2-a66a-0dc90c8f9a82}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -41,24 +38,6 @@
     </ClCompile>
     <ClCompile Include="MainFrame.cpp">
       <Filter>头文件\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="UtilImage.cpp">
-      <Filter>头文件\Ximage</Filter>
-    </ClCompile>
-    <ClCompile Include="UtilMuPdf.cpp">
-      <Filter>头文件\Mupdf</Filter>
-    </ClCompile>
-    <ClCompile Include="PdfCompress.cpp">
-      <Filter>头文件\Mupdf</Filter>
-    </ClCompile>
-    <ClCompile Include="UtilPath.cpp">
-      <Filter>头文件\Help</Filter>
-    </ClCompile>
-    <ClCompile Include="DropTarget\DropTargetReal.cpp">
-      <Filter>头文件\DropTarget</Filter>
-    </ClCompile>
-    <ClCompile Include="GSWin32Parse.cpp">
-      <Filter>头文件\gswin32c</Filter>
     </ClCompile>
     <ClCompile Include="Msg\MsgObject.cpp">
       <Filter>头文件\Msg</Filter>
@@ -69,34 +48,25 @@
     <ClCompile Include="Msg\UtilMsg.cpp">
       <Filter>头文件\Msg</Filter>
     </ClCompile>
+    <ClCompile Include="Thread\ThreadManager.cpp">
+      <Filter>头文件\Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="PDFCompress\PdfCompressEx.cpp">
+      <Filter>头文件\PDFCompress</Filter>
+    </ClCompile>
+    <ClCompile Include="Help\UtilPath.cpp">
+      <Filter>头文件\Help</Filter>
+    </ClCompile>
+    <ClCompile Include="Help\UtilImage.cpp">
+      <Filter>头文件\Help</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h">
       <Filter>头文件\Frame</Filter>
     </ClInclude>
-    <ClInclude Include="UtilImage.h">
-      <Filter>头文件\Ximage</Filter>
-    </ClInclude>
-    <ClInclude Include="UtilMuPdf.h">
-      <Filter>头文件\Mupdf</Filter>
-    </ClInclude>
-    <ClInclude Include="PdfCompress.h">
-      <Filter>头文件\Mupdf</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="UtilPath.h">
-      <Filter>头文件\Help</Filter>
-    </ClInclude>
-    <ClInclude Include="DropTarget\DropTargetReal.h">
-      <Filter>头文件\DropTarget</Filter>
-    </ClInclude>
-    <ClInclude Include="GSWin32Parse.h">
-      <Filter>头文件\gswin32c</Filter>
-    </ClInclude>
-    <ClInclude Include="MyLock.h">
-      <Filter>头文件\Help</Filter>
     </ClInclude>
     <ClInclude Include="Msg\MsgObject.h">
       <Filter>头文件\Msg</Filter>
@@ -107,7 +77,28 @@
     <ClInclude Include="Msg\UtilMsg.h">
       <Filter>头文件\Msg</Filter>
     </ClInclude>
-    <ClInclude Include="UserDefine.h">
+    <ClInclude Include="Thread\ThreadManager.h">
+      <Filter>头文件\Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="Base\BaseCom.h">
+      <Filter>头文件\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Base\SmartPointer.h">
+      <Filter>头文件\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Base\SmartRef.h">
+      <Filter>头文件\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="PDFCompress\PdfCompressEx.h">
+      <Filter>头文件\PDFCompress</Filter>
+    </ClInclude>
+    <ClInclude Include="Help\UtilPath.h">
+      <Filter>头文件\Help</Filter>
+    </ClInclude>
+    <ClInclude Include="Help\UtilImage.h">
+      <Filter>头文件\Help</Filter>
+    </ClInclude>
+    <ClInclude Include="Help\MyLock.h">
       <Filter>头文件\Help</Filter>
     </ClInclude>
   </ItemGroup>

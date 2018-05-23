@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __MSG_OBJECT_H__
+#define __MSG_OBJECT_H__
+
 #include <atlbase.h>
 #include <atlwin.h>
 using namespace ATL;
@@ -37,3 +39,4 @@ private:
 	map<UINT32, UINT32> m_mapMsgID;
 };
 
+#endif

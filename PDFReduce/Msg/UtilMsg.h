@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __UTIL_MSG_H__
+#define __UTIL_MSG_H__
+
 #include <Windows.h>
 namespace Util
 {
@@ -21,3 +23,4 @@ namespace Util
 	}
 }
 
+#endif

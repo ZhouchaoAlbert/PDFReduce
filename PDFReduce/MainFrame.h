@@ -34,6 +34,16 @@ public:// UI初始化
 	HRESULT OnDropLeave();
 	HRESULT OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
 
+	struct ST_LISTITEM_INFO
+	{
+		CString strPDFPath;
+		CString strPDFName;
+		CString strFileSize;
+		CString strState;
+	};
+	CListContainerElementUI* GetListItem(ST_LISTITEM_INFO item);
+
+	void AddListItem(vector<CString> vecFileList);
 public:
 	//启动PDF压缩
 	void StartPDFCompress();
@@ -41,9 +51,13 @@ public:
 	void StartPicConvert();
    //选择打开PDF路径
 	void SelectPDFFolderDialog();
-	
+	void SelectOutDirectory();
 private:
+	CHorizontalLayoutUI* m_pHorFileList;
+	CHorizontalLayoutUI* m_pHorFileDrop;
 	CTabLayoutUI* m_pTreeList;
+	CListUI*      m_pFileList;
+
 	HICON         m_hIcon;
 	UINT32        m_uCompressMode;
 };

@@ -2,14 +2,12 @@
 #include <atlstr.h>
 #include <ShlObj.h>
 #include <string>
-  
-#include "UtilImage.h"
-#include "UtilMuPdf.h"
+
 #include "resource.h"
-#include "DropTarget/DropTargetReal.h"
-#include "Singleton.h"
-#include "PdfCompress.h"
-#include "UtilPath.h"
+#include "Base/Singleton.h"
+
+#include "PDFCompress/PdfCompressEx.h"
+
 
 CMainFrame::CMainFrame():
 m_uCompressMode(1)
@@ -19,14 +17,7 @@ m_uCompressMode(1)
 
 CMainFrame::~CMainFrame()
 {
-	if (1 == m_uCompressMode)
-	{
-		Singleton<CPdfCompress>::UnInstance();
-	}
-	else if (2 == m_uCompressMode)
-	{
-		Singleton<CGSWin32Parse>::UnInstance();
-	}
+	Singleton<CPdfCompressEx>::Instance().ExistThread(FALSE);
 }
 
 
@@ -57,19 +48,23 @@ void CMainFrame::InitWindow()
 	SetIcon(m_hIcon, FALSE);
 	m_pTreeList = static_cast<CTabLayoutUI*>(m_PaintManager.FindControl(_T("tab_tree_list")));
 	
+	m_pHorFileList = static_cast<CHorizontalLayoutUI*>(m_PaintManager.FindControl(_T("hor_file_list")));
+	m_pHorFileDrop = static_cast<CHorizontalLayoutUI*>(m_PaintManager.FindControl(_T("hor_file_drop")));
+	m_pFileList = static_cast<CListUI*>(m_PaintManager.FindControl(_T("file_list")));
+
+
 	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
-	pEdit->SetText(_T("E:\\test\\convert\\Desert.pdf"));
+	if (pEdit)pEdit->SetText(_T("E:\\test\\convert\\Desert.pdf"));
 	CEditUI* pEditOut = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
-	pEditOut->SetText(_T("E:\\test\\convert\\out.pdf"));
-	
-	//Singleton<CDropTargetReal>::Instance().RegisterDropTarget(m_hWnd, this);
+	if (pEditOut)pEditOut->SetText(_T("E:\\test\\convert"));
+
 	::DragAcceptFiles(m_hWnd, true);
 	
 }
 
 void CMainFrame::OnFinalMessage(HWND hWnd)
 {
-//	Singleton<CDropTargetReal>::Instance().RevokeDropTarget(m_hWnd);
+
 }
 
 LRESULT CMainFrame::ResponseDefaultKeyEvent(WPARAM wParam)
@@ -125,7 +120,14 @@ void CMainFrame::Notify(TNotifyUI& msg)
 		{
 			SelectPDFFolderDialog();
 		}
-
+		else if (szName == _T("btn_drop"))
+		{
+			SelectPDFFolderDialog();
+		}
+		else if (szName == _T("btn_out_directory"))
+		{
+			SelectOutDirectory();
+		}
 	}
 	else if(msg.sType == DUI_MSGTYPE_ITEMSELECT)
 	{
@@ -179,107 +181,75 @@ void CMainFrame::StartPDFCompress()
 	}
 	pStartCompress->SetTag(1);
 
-	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
-	ATL::CString strPDFPath = pEdit->GetText();
-	if (strPDFPath.IsEmpty())
+	CString strPDFOutFolder;
+	CEditUI* pOutPath = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
+	if (NULL != pOutPath)
 	{
-		::MessageBox(m_hWnd, _T("输入PDF路径为空,请输入PDF路径!"), _T("提示"), MB_OK);
-		return;
+		strPDFOutFolder = pOutPath->GetText();
 	}
 
-	if (!IsFileExist(strPDFPath))
+	for (UINT32 uIndex = 0; uIndex < m_pFileList->GetCount();uIndex++)
 	{
-		::MessageBox(m_hWnd, _T("输入PDF路径不存在，请重新输入!"), _T("提示"), MB_OK);
-		return;
-	}
+		CListContainerElementUI* pItem = (CListContainerElementUI*)m_pFileList->GetItemAt(uIndex);
+		if (NULL  == pItem){
+			continue;
+		}
+		CControlUI* pNode = (CControlUI*)pItem->GetTag();
+		if (NULL == pNode){
+			continue;
+		}
+		CString strPDFPath = 	pNode->GetText();
+		UINT32 uId = pNode->GetTag();
+		if (!IsFileExist(strPDFPath))
+		{
+			continue;
+		}
 
-	CString strExe = strPDFPath.Right(4);
-	if (0 != strExe.CompareNoCase(_T(".pdf")))
-	{
-		::MessageBox(m_hWnd, _T("输入的不是PDF文件，请重新输入!"), _T("提示"), MB_OK);
-		return;
-	}
-
-	CEditUI* pEditOut = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
-	ATL::CString strPDFOutPath = pEditOut->GetText();
-	CString strExeOut = strPDFOutPath.Right(4);
-	if (0 != strExeOut.CompareNoCase(_T(".pdf")))
-	{
-		::MessageBox(m_hWnd, _T("输出的不是PDF文件，请重新输入!"), _T("提示"), MB_OK);
-		return;
-	}
-	CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
-	if (pProgress)
-	{
-		pProgress->SetValue(0);
-	}
-
-	if (1 == m_uCompressMode)
-	{
 		//对PDF 压缩体积处理
-		Singleton<CPdfCompress>::Instance().SetProcessCallback(
-			[this](INT32 nCode,INT32 nVal,CString strOutInfo){	
-			if (0 == nCode || 1 == nCode)
-			{
-				if (0 == nCode){
-					CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
-					if (pStartCompress)pStartCompress->SetTag(0);
-				}
-				CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
-				if (pProgress){
-					pProgress->SetValue(nVal);
-				}		
-				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
-				if (pParseTips){
-					pParseTips->SetText(strOutInfo);
-				}
-			}
-			else if (2 == nCode)  
-			{
-				CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
-				if (pStartCompress)pStartCompress->SetTag(0);
-				
-				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
-				if (pParseTips){
-					pParseTips->SetText(strOutInfo);
-				}
-			}
-		});
-		Singleton<CPdfCompress>::Instance().StartThread(strPDFPath, _T(""), strPDFOutPath);
-	}
-	else if (2 == m_uCompressMode)
-	{
-		Singleton<CGSWin32Parse>::Instance().SetProcessCallback(
-			[this](INT32 nCode, INT32 nVal, CString strOutInfo){
-			if (0 == nCode || 1 == nCode)
-			{
-				if (0 == nCode){
-					CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
-					if (pStartCompress)pStartCompress->SetTag(0);
-				}
-				CProgressUI* pProgress = static_cast<CProgressUI*>(m_PaintManager.FindControl(_T("progress")));
-				if (pProgress){
-					pProgress->SetValue(nVal);
-				}
-				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
-				if (pParseTips){
-					pParseTips->SetText(strOutInfo);
-				}
-			}
-			else if (2 == nCode || 3 == nCode)
-			{
-				CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
-				if (pStartCompress)pStartCompress->SetTag(0);
+		Singleton<CPdfCompressEx>::Instance().SetProcessCallback(
+			[this](INT32 nCode, INT32 nId,INT32 nVal, CString strOutInfo){
 
-				CLabelUI* pParseTips = static_cast<CLabelUI*>(m_PaintManager.FindControl(_T("label_parse_tips")));
-				if (pParseTips){
-					pParseTips->SetText(strOutInfo);
-				}
+			CListContainerElementUI* pItem = (CListContainerElementUI*)m_pFileList->GetItemAt(nId);
+			if (NULL == pItem){
+				return;
 			}
-			
+			CLabelUI* pLabel = (CLabelUI*)pItem->FindSubControl(_T("lab_state"));
+
+			if (E_PDFCOMPRESS_STATE_FINISH == nCode)
+			{
+				CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+				if (pStartCompress)pStartCompress->SetTag(0);
+				CString strTest;
+				strTest.Format(_T("压缩完成"));
+				pLabel->SetText(strTest);
+			}
+			else if (E_PDFCOMPRESS_STATE_PRASE == nCode)
+			{
+				CString strTest;
+				strTest.Format(_T("解析进度%d%%"), nVal);
+				pLabel->SetText(strTest);
+			}
+			else if (E_PDFCOMPRESS_STATE_PERFECT == nCode)
+			{
+				CString strTest;
+				strTest.Format(_T("检测是完美的PDF"));
+				pLabel->SetText(strTest);
+			}
+			else if (E_PDFCOMPRESS_STATE_FAIL == nCode)
+			{
+				CString strTest;
+				strTest.Format(_T("压缩失败"));
+				pLabel->SetText(strTest);
+			}
 		});
-		Singleton<CGSWin32Parse>::Instance().InitCmdLineParam(strPDFPath, strPDFOutPath, m_hWnd);
-		Singleton<CGSWin32Parse>::Instance().PipeCmdLine();
+
+		ST_PDFINFO_NODE st;
+		st.nId				= uId;
+		st.strPdfInPath		= strPDFPath;
+		st.strPdfOutFolder	= strPDFOutFolder;
+
+		Singleton<CPdfCompressEx>::Instance().AddTask(st);
+		Singleton<CPdfCompressEx>::Instance().StartCompress();
 	}
 }
 
@@ -308,7 +278,58 @@ void CMainFrame::StartPicConvert()
 		::MessageBox(m_hWnd, _T("输出图片路径为空,请输入输出图片路径!"), _T("提示"), MB_OK);
 		return;
 	}
-	Util::Image::ConvertType(strPicPath, strPicOutPath);
+	//Util::Image::ConvertType(strPicPath, strPicOutPath);
+}
+
+void CMainFrame::AddListItem(vector<CString> vecFileList)
+{
+	m_pHorFileDrop->SetVisible(false);
+	m_pHorFileList->SetVisible(true);
+
+	for (UINT32 uIndex = 0; uIndex < vecFileList.size(); uIndex++)
+	{
+		CString strPDFPath(vecFileList[uIndex]);
+		if (0 == strPDFPath.Right(4).CompareNoCase(_T(".pdf")))
+		{
+			INT32 iStart = strPDFPath.ReverseFind(_T('\\'));
+			if (iStart < 0)
+			{
+				continue;
+			}
+			if (0 != strPDFPath.Right(4).CompareNoCase(_T(".pdf")))
+			{
+				continue;
+			}
+			CString strPdfFileName;
+			strPdfFileName = strPDFPath.Mid(iStart + 1, strPDFPath.GetLength() - iStart - 1);
+
+
+			HANDLE hFile = CreateFile(strPDFPath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+			if (hFile == INVALID_HANDLE_VALUE)
+				continue;
+			LARGE_INTEGER size;
+			BOOL bRet = GetFileSizeEx(hFile, &size);
+			if (!bRet)
+			{
+				continue;
+			}
+			UINT32 uSize = size.QuadPart;
+
+			ST_LISTITEM_INFO list;
+			list.strPDFPath = strPDFPath;
+			list.strPDFName = strPdfFileName;
+			CString strFileSize;
+			strFileSize.Format(_T("%dM"), uSize / 1024 / 1024);
+			list.strFileSize = strFileSize;
+			list.strState = _T("还未压缩");
+			CListContainerElementUI* pItem = GetListItem(list);
+			if (pItem)
+			{
+				m_pFileList->Add(pItem);
+			}
+		}
+	}
+
 }
 
 void CMainFrame::SelectPDFFolderDialog()
@@ -333,23 +354,52 @@ void CMainFrame::SelectPDFFolderDialog()
 		szFileName = dlg.GetNextPathName(position);
 		vecFileList.push_back(szFileName);
 	}
-	if (vecFileList.size() > 2)
+	if (vecFileList.size() <= 0)
 	{
 		MessageBox(NULL, _T("请添加一个PDF文件！"), _T("提示"), MB_OK);
 		return;
 	}
 	
-	CString strPDFPath(vecFileList[0]);
-	CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
-	if (pEdit && !strPDFPath.IsEmpty())pEdit->SetText(strPDFPath);
+	//添加到list
+	AddListItem(vecFileList);
 }
 
+void CMainFrame::SelectOutDirectory()
+{
+	BROWSEINFO bi;						// BROWSEINFO结构体
+	TCHAR szBuffer[512] = {0};
+	TCHAR szFullPath[512] = { 0 };
+
+	bi.hwndOwner = m_hWnd;				// m_hWnd程序主窗口
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szBuffer;			// 返回选择的目录名的缓冲区
+	bi.lpszTitle = _T("选择目录");		// 弹出的窗口的文字提示
+	bi.ulFlags = BIF_RETURNONLYFSDIRS;	// 只返回目录。其他标志看MSDN
+	bi.lpfn = NULL;                     // 回调函数，有时很有用
+	bi.lParam = 0;
+	bi.iImage = 0;
+	ITEMIDLIST * pidl = ::SHBrowseForFolder(&bi);   // 显示弹出窗口，ITEMIDLIST很重要
+	if (::SHGetPathFromIDList(pidl, szFullPath))    // 在ITEMIDLIST中得到目录名的整个路径
+	{
+		// 成功
+		CEditUI* pOutPath = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_out_path")));
+		if (NULL != pOutPath)
+		{
+			pOutPath->SetText(CString(szFullPath));
+		}
+	}
+	else
+	{
+		// 失败
+	}
+
+}
 
 LRESULT CMainFrame::OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	HDROP hDropInfo = (HDROP)wParam;
 	INT	nFileCount = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
-	if (nFileCount > 2)
+	if (nFileCount <= 0)
 	{
 		MessageBox(NULL, _T("请托一个PDF文件放到改区域！"), _T("提示"),MB_OK);
 		return S_OK;
@@ -358,7 +408,7 @@ LRESULT CMainFrame::OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	POINT point;
 	::GetCursorPos(&point);
 	ScreenToClient(m_hWnd, &point);
-	CButtonUI* pControlUI = static_cast<CButtonUI*>(m_PaintManager.FindControl(point));
+	CControlUI* pControlUI = static_cast<CControlUI*>(m_PaintManager.FindControl(point));
 	if (NULL == pControlUI)
 	{
 		return S_OK;
@@ -380,15 +430,9 @@ LRESULT CMainFrame::OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 		vecFileList.push_back(szFileName);
 	}
 	::DragFinish(hDropInfo);
-	if (vecFileList.size() > 0)
-	{
-		CString strPDFPath(vecFileList[0]);
-		if (0 == strPDFPath.Right(4).CompareNoCase(_T(".pdf")))
-		{
-			CEditUI* pEdit = static_cast<CEditUI*>(m_PaintManager.FindControl(_T("edt_pdf_in_path")));
-			if (pEdit && !strPDFPath.IsEmpty())pEdit->SetText(strPDFPath);
-		}
-	}
+	
+	//添加到list
+	AddListItem(vecFileList);
 	return S_OK;
 }
 
@@ -408,4 +452,93 @@ HRESULT CMainFrame::OnDropLeave()
 HRESULT CMainFrame::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
 	return m_PaintManager.OnDrop(pDataObj, grfKeyState, pt, pdwEffect);
+}
+
+
+
+CListContainerElementUI* CMainFrame::GetListItem(ST_LISTITEM_INFO item)
+{
+
+	static UINT32 uId = 0;
+
+	CListContainerElementUI* pItem = new CListContainerElementUI;
+	pItem->SetFixedHeight(40);
+	pItem->SetBottomBorderSize(2);
+	pItem->SetBorderColor(0xFFe6e6e6);
+
+	CControlUI* pNode = new CControlUI();
+	if (pNode){
+		pNode->SetText(item.strPDFPath);
+		pNode->SetTag(uId++);
+	}
+	pItem->SetTag((UINT_PTR)pNode);
+
+
+	CHorizontalLayoutUI* pHorFileName = new CHorizontalLayoutUI;
+	if (pHorFileName != NULL)
+	{
+		CLabelUI* pLableFileName = new CLabelUI;
+		if (pLableFileName != NULL)
+		{
+			pLableFileName->SetTextPadding(CDuiRect(4, 0, 0, 0));
+			pLableFileName->SetText(item.strPDFName);
+			pLableFileName->SetTextStyle(DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+			pLableFileName->SetAttribute(_T("endellipsis"), _T("true"));
+			pHorFileName->Add(pLableFileName);
+		}
+		pHorFileName->SetFixedWidth(150);
+		pItem->Add(pHorFileName);
+	}
+
+	CHorizontalLayoutUI* pHorLine1 = new CHorizontalLayoutUI;
+	if (pHorLine1 != NULL)
+	{
+		pHorLine1->SetFixedWidth(1);
+		pItem->Add(pHorLine1);
+	}
+
+	CHorizontalLayoutUI* pHorFileSize = new CHorizontalLayoutUI;
+	if (pHorFileSize != NULL)
+	{
+		CLabelUI* pLableFileSize = new CLabelUI;
+		if (pLableFileSize != NULL)
+		{
+			pLableFileSize->SetTextPadding(CDuiRect(4, 0, 0, 0));
+			pLableFileSize->SetText(item.strFileSize);
+			pLableFileSize->SetTextStyle(DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+			pLableFileSize->SetAttribute(_T("endellipsis"), _T("true"));
+			pHorFileSize->Add(pLableFileSize);
+		}
+		pHorFileSize->SetFixedWidth(150);
+		pItem->Add(pHorFileSize);
+	}
+
+	CHorizontalLayoutUI* pHorLine2 = new CHorizontalLayoutUI;
+	if (pHorLine2 != NULL)
+	{
+		pHorLine2->SetFixedWidth(1);
+		pItem->Add(pHorLine2);
+	}
+
+	CHorizontalLayoutUI* pHorFileState = new CHorizontalLayoutUI;
+	if (pHorFileState != NULL)
+	{
+		CLabelUI* pLableFileState = new CLabelUI;
+	
+		if (pLableFileState != NULL)
+		{
+			pLableFileState->SetTextPadding(CDuiRect(4, 0, 0, 0));
+			pLableFileState->SetName(_T("lab_state"));
+			pLableFileState->SetText(item.strState);
+			pLableFileState->SetTextStyle(DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+			pLableFileState->SetAttribute(_T("endellipsis"), _T("true"));
+			pHorFileState->Add(pLableFileState);
+		}
+		pHorFileState->SetFixedWidth(150);
+		pItem->Add(pHorFileState);
+	}
+
+
+
+	return pItem;
 }

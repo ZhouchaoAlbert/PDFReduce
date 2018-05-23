@@ -43,44 +43,54 @@
 				<VerticalLayout name="ver_reduce_layout" inset="10,5,5,0" vscrollbar="true" >
 			
 					<VerticalLayout >
-						<HorizontalLayout height="30" padding="10,0,0,0" >
-						    <Button name="btn_open_pdf_path"  width="100" textcolor="#FFFFFFFF" bkimage="material/btn_addfile.png" />
-							<Control width="5" />
-							<Edit  name="edt_pdf_in_path"  bordercolor="#FF2d87ed" bordersize="1"  text="" textcolor="#FF949494" />
-							<Control width="10" />
+						<HorizontalLayout height="36" padding="10,0,0,0" >
+					
+						    <Button name="btn_open_pdf_path"  width="100" textcolor="#FFFFFFFF" normalimage="material/addfile.png" hotimage="material/addfile_hot.png" pushimage="material/addfile_hot.png"/>
+							<Control />
 						</HorizontalLayout>
 						<Control height="10" />
+					
+						<HorizontalLayout name="hor_file_list" visible="false" padding="10,0,10,0"  bordercolor="#FF999999" bordersize="1" > 
+							<List name="file_list" inset="5,5,5,5" itembkcolor="#FFFFFFFF" itemselectedtextcolor="#FFFFFFFF" itemselectedbkcolor="#FFebebeb" itemhotbkcolor="#FFF2F2F2" >
+								<ListHeader height="40" menu="true" bottombordersize="2" bordercolor="#FFe6e6e6">
 						
+									<ListHeaderItem text="文件名"  width="150" align="left"  dragable="false" />
+									<Control width="1" bkcolor="#FFD7D7D7"/>
+									<ListHeaderItem text="文件大小"   width="150" align="left" dragable="false" />
+									<Control width="1" bkcolor="#FFD7D7D7"/>
+									<ListHeaderItem text="文件状态"   width="150" align="left"  dragable="false" />
+										
+								</ListHeader>
+								 <!--ListHeader height="40" bkcolor="#FFE6ECF7" bordersize="1" bordercolor="#FFD7D7D7">
+									<ListHeaderItem text="文件名"  width="150" align="left" textpadding="15,0,0,0" />
+									<Control width="1" bkcolor="#FFD7D7D7"/>
+									<ListHeaderItem text="文件大小"   width="150" align="left" textpadding="15,0,0,0" />
+									<Control width="1" bkcolor="#FFD7D7D7"/>
+									<ListHeaderItem text="文件状态"   width="150" align="left" textpadding="15,0,0,0" />
+									<Control width="1" bkcolor="#FFD7D7D7"/>
+								</ListHeader-->
+							</List>
+						</HorizontalLayout>
+					
+						<HorizontalLayout name="hor_file_drop"  padding="10,0,10,0"  bordercolor="#FF999999" bordersize="1" >
+							<Control />
+							<VerticalLayout  width="500" >
+								<Control />
+								<Button  name="btn_drop"  height="240" normalimage="material/drop_nor.png" hotimage="material/drop_hot.png" />
+								<Control />
+							</VerticalLayout>
+							<Control />
+						</HorizontalLayout>	
+						<Control height="10" />
 						<HorizontalLayout height="30" padding="10,0,0,0" >
-						    <Button text="输出目录" width="100" align="center" valign="center"  bkcolor="#FF2d87ed" textcolor="#FFFFFFFF"/>
+						    <Button text="输出目录" name="btn_out_directory" width="100" align="center" valign="center"  bkcolor="#FF2d87ed" textcolor="#FFFFFFFF"/>
 							<Control width="5" />
 							<Edit  name="edt_pdf_out_path"  bordercolor="#FF2d87ed" bordersize="1"  text="" textcolor="#FF949494" />
 							<Control width="10" />
-						</HorizontalLayout>
-						
-						<Control height="10" />
-					
-						<HorizontalLayout height="30"  padding="10,0,0,0" >
-							<Progress name="progress"   height="5" bkcolor="#FFDEDEDE" disabledtextcolor="#FFA7A6AA" align="center" foreimage="Material\progressbar.png"  min="0" max="100" value="0" hor="true"/>
-							<Control width="10" />
-							<Combo name="comb_group" width="150" dropboxsize="0,50" height="30" textpadding="5,2,21,2" itemtextpadding="5,0,0,0" arrowwidth="32" normalarrow="material/down.png" droparrow="material/up.png">
-								<ListLabelElement  name="comb_my_compress" text="针对图片压缩模式" selected="true" height="25" />
-								<ListLabelElement name="comb_gswin32_compress" text="GSWin32压缩模式" height="25" />
-							</Combo>
-							<Control width="10" />
 							<Button name="btn_open_pdf_compress" width="100"  bkimage="file='material/btn_start_compress.png' corner='5,5,5,5'" />
 							<Control width="10" />
-						</HorizontalLayout>		
+						</HorizontalLayout>
 						<Control height="10" />
-						<HorizontalLayout >
-							<Control />
-							<Button  name="btn_drop" width="530" height="360" bkimage="material/dropbk.png" droptarget="true"/>
-							<Control />
-						</HorizontalLayout>	
-						<HorizontalLayout height="30">
-							<Label text="信息输出：" bkcolor="#FF2d87ed" width="60" />
-							<Label name="label_parse_tips" bkcolor="#FF2d87ed"  />
-						</HorizontalLayout>	
 					</VerticalLayout>
 				</VerticalLayout>
 				
@@ -113,3 +123,47 @@
 		</HorizontalLayout>
   </VerticalLayout>
 </Window>
+
+
+
+
+<!--VerticalLayout >
+<HorizontalLayout height="30" padding="10,0,0,0" >
+<Button name="btn_open_pdf_path"  width="100" textcolor="#FFFFFFFF" bkimage="material/btn_addfile.png" />
+<Control width="5" />
+<Edit  name="edt_pdf_in_path"  bordercolor="#FF2d87ed" bordersize="1"  text="" textcolor="#FF949494" />
+<Control width="10" />
+</HorizontalLayout>
+<Control height="10" />
+
+<HorizontalLayout height="30" padding="10,0,0,0" >
+<Button text="输出目录" width="100" align="center" valign="center"  bkcolor="#FF2d87ed" textcolor="#FFFFFFFF"/>
+<Control width="5" />
+<Edit  name="edt_pdf_out_path"  bordercolor="#FF2d87ed" bordersize="1"  text="" textcolor="#FF949494" />
+<Control width="10" />
+</HorizontalLayout>
+
+<Control height="10" />
+
+<HorizontalLayout height="30"  padding="10,0,0,0" >
+<Progress name="progress"   height="5" bkcolor="#FFDEDEDE" disabledtextcolor="#FFA7A6AA" align="center" foreimage="Material\progressbar.png"  min="0" max="100" value="0" hor="true"/>
+<Control width="10" />
+<Combo name="comb_group" width="150" dropboxsize="0,50" height="30" textpadding="5,2,21,2" itemtextpadding="5,0,0,0" arrowwidth="32" normalarrow="material/down.png" droparrow="material/up.png">
+	<ListLabelElement  name="comb_my_compress" text="针对图片压缩模式" selected="true" height="25" />
+	<ListLabelElement name="comb_gswin32_compress" text="GSWin32压缩模式" height="25" />
+</Combo>
+<Control width="10" />
+<Button name="btn_open_pdf_compress" width="100"  bkimage="file='material/btn_start_compress.png' corner='5,5,5,5'" />
+<Control width="10" />
+</HorizontalLayout>		
+<Control height="10" />
+<HorizontalLayout >
+<Control />
+<Button  name="btn_drop" width="530" height="360" bkimage="material/dropbk.png" droptarget="true"/>
+<Control />
+</HorizontalLayout>	
+<HorizontalLayout height="30">
+<Label text="信息输出：" bkcolor="#FF2d87ed" width="60" />
+<Label name="label_parse_tips" bkcolor="#FF2d87ed"  />
+</HorizontalLayout>	
+</VerticalLayout-->

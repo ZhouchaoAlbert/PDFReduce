@@ -1,77 +1,72 @@
-#include "PdfCompress.h"
+#include "PdfCompressEx.h"
 #include <sstream>  
-
 #include <io.h>
 #include <fstream>
 #include<iostream>
 #include <Windows.h>
-#include "UtilImage.h"
-#include "UtilPath.h"
 
 #include <vector>
 #include "ximage.h"
 
+#include"..\Help\UtilPath.h"
+#include "..\Help\UtilImage.h"
 
+#define  WM_MYCOMPRESS_UI_TASK WM_USER + 1001
 
-CPdfCompress::CPdfCompress():
-m_ctx(nullptr),
-m_doc(nullptr),
-
-m_hThread(nullptr)
+CPdfCompressEx::CPdfCompressEx() :
+m_bRun(FALSE),
+m_ctx(NULL),
+m_doc(NULL)
 {
 	AddMsg(WM_MYCOMPRESS_UI_TASK);
 	Start();
 }
 
-CPdfCompress::~CPdfCompress()
+CPdfCompressEx::~CPdfCompressEx()
 {
-	ExistThread(true);
 	Stop();
 }
 
-
-UINT32 CPdfCompress::StartThread(ATL::CString strPdfPath, ATL::CString strPassword, ATL::CString strPdfOutPath)
+void CPdfCompressEx::AddTask(ST_PDFINFO_NODE TaskNode)
 {
-	Util::Path::GetImageTempPath(TRUE);
-	m_strPdfPath	= strPdfPath;
-	m_strPassword	= strPassword;
-	m_strPdfOutPath = strPdfOutPath;
-
-
-	UINT32 uiThreadID = 0;
-	HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc, (void*)this, 0, &uiThreadID);
-	if (hThread == NULL)
-		return 0;
-	return uiThreadID;
+	m_CritSec.Lock();
+	m_TaskList.push_back(TaskNode);
+	m_CritSec.Unlock();	
 }
 
-void CPdfCompress::SetProcessCallback(std::function<void(INT32 nCode, INT32 nVal, CString strOutInfo)>Func_CallBack)
+UINT32 CPdfCompressEx::StartCompress()
+{
+	if (m_bRun)
+	{
+		ATLASSERT(FALSE);
+		return 0;
+	}
+	if (!Util::Path::IsFileExist(Util::Path::GetImageTempPath(FALSE)))
+	{
+		Util::Path::GetImageTempPath(TRUE);
+	}
+
+	Thread::IThreadManager* pThreadManager = NULL;
+	Thread::GetBaseThreadObject((void**)&pThreadManager);
+	if (NULL == pThreadManager)
+	{
+		ATLASSERT(FALSE);
+		return 0;
+	}
+	m_bRun = TRUE;
+	bool bRet = pThreadManager->CreateThread(this, m_uThreadId);
+	if (!bRet) m_bRun = FALSE;
+	return m_uThreadId;
+}
+
+void CPdfCompressEx::SetProcessCallback(std::function<void(INT32 nCode, INT32 nId, INT32 nVal, CString strOutInfo)>Func_CallBack)
 {
 	m_Func_CallBack = Func_CallBack;
 }
-// 线程回调
-UINT WINAPI  CPdfCompress::ThreadProc(void* pVoid)
-{
-	CPdfCompress *pThreadCallback = static_cast<CPdfCompress *>(pVoid);
-	if (pThreadCallback)
-	{
-		pThreadCallback->Run();
-	}
-	return 0;
-}
 
-void CPdfCompress::Run()
-{
-	//m_CritSec.Lock();
- 	if (Init(m_strPdfPath, m_strPassword))
- 	{
-		PraseImageTypeObj();
- 	}
-	//m_CritSec.Unlock();
-}
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //初始化操作
-BOOL CPdfCompress::Init(ATL::CString strPdfPath, ATL::CString strPassword)
+BOOL CPdfCompressEx::DocumentInit(ATL::CString strPdfPath, ATL::CString strPassword)
 {
 	if (m_doc){
 		pdf_close_document(m_doc);
@@ -113,27 +108,27 @@ BOOL CPdfCompress::Init(ATL::CString strPdfPath, ATL::CString strPassword)
 }
 
 //获取PDF页
-UINT32 CPdfCompress::GetPdfPages(pdf_document* doc)
+UINT32 CPdfCompressEx::GetPdfPages(pdf_document* doc)
 {
 	return pdf_count_pages(doc);
 }
 
 //是否是图片
-BOOL CPdfCompress::IsImageType(pdf_obj* dict)
+BOOL CPdfCompressEx::IsImageType(pdf_obj* dict)
 {
 	pdf_obj *type = pdf_dict_gets(dict, "Subtype");
 	return pdf_is_name(type) && !strcmp(pdf_to_name(type), "Image");
 }
 
 //彩色空间是 RGB
-BOOL CPdfCompress::IsRGBColorSpace(pdf_obj* dict)
+BOOL CPdfCompressEx::IsRGBColorSpace(pdf_obj* dict)
 {
 	pdf_obj *colorspace = pdf_dict_gets(dict, "ColorSpace");
 	return pdf_is_name(colorspace) && !strcmp(pdf_to_name(colorspace), "DeviceRGB");
 }
 
 //zlib压缩
-BOOL CPdfCompress::IsFlateDecode(pdf_obj* dict)
+BOOL CPdfCompressEx::IsFlateDecode(pdf_obj* dict)
 {
 	pdf_obj *filter;
 	filter = pdf_dict_gets(dict, "Filter");
@@ -147,7 +142,7 @@ BOOL CPdfCompress::IsFlateDecode(pdf_obj* dict)
 	return FALSE;
 }
 
-BOOL  CPdfCompress::WritePixmap(fz_context *ctx, fz_pixmap *pix, ATL::CString strImagePath, int rgb)
+BOOL  CPdfCompressEx::WritePixmap(fz_context *ctx, fz_pixmap *pix, ATL::CString strImagePath, int rgb)
 {
 	BOOL bRet = FALSE;
 
@@ -177,7 +172,7 @@ BOOL  CPdfCompress::WritePixmap(fz_context *ctx, fz_pixmap *pix, ATL::CString st
 	return bRet;
 }
 
-BOOL CPdfCompress::SaveImageAsPng(ATL::CString strImagePath, INT32 nNum)
+BOOL CPdfCompressEx::SaveImageAsPng(ATL::CString strImagePath, INT32 nNum)
 {
 	BOOL bRet = FALSE;
 	if (strImagePath.IsEmpty())
@@ -239,7 +234,7 @@ BOOL CPdfCompress::SaveImageAsPng(ATL::CString strImagePath, INT32 nNum)
 }
 
 
-BOOL CPdfCompress::SavaImageAsJpg(INT32 nNum)
+BOOL CPdfCompressEx::SavaImageAsJpg(INT32 nNum)
 {
 
 #if 0
@@ -297,7 +292,7 @@ BOOL CPdfCompress::SavaImageAsJpg(INT32 nNum)
  	if (nullptr == bmpBuffer){
  		return FALSE;
  	}
-#if 1
+#if 0
 	//test
 	FILE* fp2;
 	fp2 = fopen("E:\\test\\convert\\111111.bmp", "wb");
@@ -326,7 +321,7 @@ BOOL CPdfCompress::SavaImageAsJpg(INT32 nNum)
 	return TRUE;
 }
 
-BOOL CPdfCompress::IsWriteStream(INT32 nNum)
+BOOL CPdfCompressEx::IsWriteStream(INT32 nNum)
 {
 	BOOL bRet = FALSE;
 	//流中点阵图的大小
@@ -360,88 +355,18 @@ BOOL CPdfCompress::IsWriteStream(INT32 nNum)
 	return bRet;
 }
 
-
-BOOL CPdfCompress::IsCompressImageStream(pdf_document* doc, INT32 num, INT32 gen)
-{
-	fz_compressed_buffer * fz_com_buffer = pdf_load_compressed_stream(doc, num, gen);
-	if (!fz_com_buffer)
-	{
-		ATLASSERT(FALSE);
-		return FALSE;
-	}
-	//Test 数据写本地
-	if (FZ_IMAGE_JPEG  == fz_com_buffer->params.type)
-	{
-		CString strSrcImage;
-		strSrcImage.Format(_T("%s\\yueshu-img-%d.jpg"), Util::Path::GetImageTempPath(), num);
-		CString strDestImage;
-		strDestImage.Format(_T("%s\\sec-yueshu-img-%d.jpg"), Util::Path::GetImageTempPath(), num);
-		FILE* fp = NULL;
-		fp = _wfopen(strSrcImage, _T("wb"));
-		if (NULL != fp)
-		{
-			fwrite((char*)fz_com_buffer->buffer->data, fz_com_buffer->buffer->len, 1, fp);
-			fclose(fp);
-
-			if (Util::Image::ConvertType(strSrcImage, strDestImage))
-			{
-				pdf_obj  *obj;
-				obj = pdf_load_object(doc, num, 0);
-				WriteDataToStream(obj, strDestImage, num);
-				pdf_drop_obj(obj);
-			}
-
-		}
-		DeleteFile(strSrcImage);
-		DeleteFile(strDestImage);
-		return FALSE;
-	}
-	else if (FZ_IMAGE_FAX == fz_com_buffer->params.type)
-	{
-		return TRUE;
-	}
-	else if (FZ_IMAGE_RLD == fz_com_buffer->params.type)
-	{
-		return TRUE;
-	}
-	else if (FZ_IMAGE_FLATE == fz_com_buffer->params.type)
-	{
-		//1.对buffer 数据解码
-		//2.位图+像素
-
-		return TRUE;
-	}
-	else if (FZ_IMAGE_LZW == fz_com_buffer->params.type)
-	{
-		return TRUE;
-	}
-	return FALSE;
-}
-
-
 //解析资源信息
-void CPdfCompress::PraseImageTypeObj()
+void CPdfCompressEx::PraseImageTypeObj(INT32 nId, CString strPdfOutPath)
 {
-	
 	std::vector<UINT32> vecObjNum;
-	
 	UINT32 uObjNums = pdf_count_objects(m_doc);
 	for (UINT32 uIndex = 1; uIndex < uObjNums; uIndex++)
 	{
 		pdf_obj  *obj;
 		obj = pdf_load_object(m_doc, uIndex, 0);
-		
 		if (IsImageType(obj) && IsFlateDecode(obj))
  		{
 			vecObjNum.push_back(uIndex);
-#if 0  //没有压缩的流 点阵像素图
-			fz_buffer* fz_buf = pdf_load_stream(m_doc, uIndex, 0);
-			FILE* fp;
-			fp = fopen("E:\\test\\convert\\2222.txt", "wb");
-			fwrite(fz_buf->data, fz_buf->len, 1, fp);
-			fclose(fp);
-			fz_drop_buffer(ctx, fz_buf);
-#endif
  		}
 		pdf_drop_obj(obj);
 	}
@@ -451,48 +376,44 @@ void CPdfCompress::PraseImageTypeObj()
 	for (UINT32 uIndex = 0; uIndex < vecObjNum.size(); uIndex++)
 	{	
 		UINT32 uObjNum = vecObjNum[uIndex];
-		//获取流数据
-		/*if (IsCompressImageStream(doc, uNum, 0))*/
-		{
-			CString strDestImage;
-			strDestImage.Format(_T("%s\\yueshu-img-%d.jpg"), Util::Path::GetImageTempPath(), uObjNum);
+
+		CString strDestImage;
+		strDestImage.Format(_T("%s\\yueshu-img-%d.jpg"), Util::Path::GetImageTempPath(), uObjNum);
 		
-			if (SavaImageAsJpg(uObjNum))
+		if (SavaImageAsJpg(uObjNum))
+		{
+			if (IsWriteStream(uObjNum))
 			{
-#if 1
-				if (IsWriteStream(uObjNum))
-				{
-					bPerfectPDF = FALSE;
-					pdf_obj  *obj = NULL;
-					obj = pdf_load_object(m_doc, uObjNum, 0);
-					WriteDataToStream(obj, strDestImage, uObjNum);
-					pdf_drop_obj(obj);
-				}
-#endif
+				bPerfectPDF = FALSE;
+				pdf_obj  *obj = NULL;
+				obj = pdf_load_object(m_doc, uObjNum, 0);
+				WriteDataToStream(obj, strDestImage, uObjNum);
+				pdf_drop_obj(obj);
 			}
-			DeleteFile(strDestImage);
 		}
+		DeleteFile(strDestImage);
+
 		//跳线程设置进度
 		CString strOutInfo;
 		strOutInfo.Format(_T("Prase image obj:%d"), uObjNum);
-		JumpThreadSetProcess(1, 100*(uCurIndex++) / vecObjNum.size(), strOutInfo);
+		JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_PRASE, 100 * (uCurIndex++) / vecObjNum.size(), strOutInfo);
 	}
 
 	if (bPerfectPDF)
 	{
 		CString strOutInfo;
 		strOutInfo.Format(_T("Perfect PDF！Not Need Prase!"));
-		JumpThreadSetProcess(2, 0, strOutInfo);
+		JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_PERFECT, 0, strOutInfo);
 	}
 	else
 	{
 		fz_write_options ops = { 0 };
-		ATL::CW2A szPdfOutPath(m_strPdfOutPath, CP_UTF8);
+		ATL::CW2A szPdfOutPath(strPdfOutPath, CP_UTF8);
 		pdf_write_document(m_doc, (char*)szPdfOutPath, &ops);
 
 		CString strOutInfo;
 		strOutInfo.Format(_T("Prase Sucess!"));
-		JumpThreadSetProcess(0, 100, strOutInfo);
+		JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_FINISH, 100, strOutInfo);
 	}
 	if (m_doc){
 		pdf_close_document(m_doc);
@@ -503,30 +424,11 @@ void CPdfCompress::PraseImageTypeObj()
 	m_doc = nullptr;
 	m_ctx = nullptr;
 
-	
 	uCurIndex = 1;
 }
 
-BOOL CPdfCompress::ImageConvert(ATL::CString strSrcImagePath, ATL::CString strDestImagePath, INT32 nNum)
-{
-	BOOL bRet = FALSE;
-	if (strSrcImagePath.IsEmpty() || strDestImagePath.IsEmpty())
-	{
-		ATLASSERT(FALSE);
-		return bRet;
-	}
-	ATL::CString strNum;
-	strNum.Format(_T("yueshu-img-%d."), nNum);
-	if (strSrcImagePath.Find(strNum) <  0 || strDestImagePath.Find(strNum) < 0)
-	{
-		return bRet;
-	}
-	bRet = Util::Image::ConvertType(strSrcImagePath, strDestImagePath);
-	return bRet;
-}
 
-
-BOOL  CPdfCompress::WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImagePath, INT32 nNum)
+BOOL  CPdfCompressEx::WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImagePath, INT32 nNum)
 {
 	ATL::CW2A szDestImagePath(strDestImagePath, CP_UTF8);
 
@@ -601,126 +503,91 @@ BOOL  CPdfCompress::WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImageP
 }
 
 
-void CPdfCompress::JumpThreadSetProcess(INT32 nCode, INT32 nVal, CString strPraseInfo)
+void CPdfCompressEx::JumpThreadSetProgress(INT32 nId, E_PDFCOMPRESS_STATE eState, INT32 nVal, CString strOutInfo)
 {
-	ST_PARSE_RESULT* stPraseResult = new ST_PARSE_RESULT;
-	stPraseResult->nCode = nCode;
-	stPraseResult->nVal = nVal;
-	stPraseResult->strOutInfo = strPraseInfo;
-	::PostMessage(GetMsgWnd(), WM_MYCOMPRESS_UI_TASK, (WPARAM)stPraseResult, (LPARAM)0);
+	ST_COMPRESS_RESULT* stCompressResult = new ST_COMPRESS_RESULT;
+	stCompressResult->nId = nId;
+	stCompressResult->eState = eState;
+	stCompressResult->nVal = nVal;
+	stCompressResult->strOutInfo = strOutInfo;
+	::PostMessage(GetMsgWnd(), WM_MYCOMPRESS_UI_TASK, (WPARAM)stCompressResult, (LPARAM)0);
 }
 
-void CPdfCompress::ExistThread(bool bForced)
-{
-	if (m_hThread)
-	{
-		if (bForced)
-			::TerminateThread(m_hThread, 0);
-		else
-			::WaitForSingleObject(m_hThread, INFINITE);
-		CloseHandle(m_hThread);
-	}
-	m_hThread = nullptr;
-}
 
-void CPdfCompress::OnMessage(UINT32 uMsgID, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+void CPdfCompressEx::OnMessage(UINT32 uMsgID, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	if (WM_MYCOMPRESS_UI_TASK == uMsgID)
 	{
 
-		ST_PARSE_RESULT* stPraseResult = (ST_PARSE_RESULT*)(wParam);
-		if (NULL ==stPraseResult)
+		ST_COMPRESS_RESULT* stCompressResult = (ST_COMPRESS_RESULT*)(wParam);
+		if (NULL == stCompressResult)
 		{
 			return;
 		}
 		if (m_Func_CallBack)
 		{
-			m_Func_CallBack(stPraseResult->nCode,	stPraseResult->nVal,stPraseResult->strOutInfo);
+			m_Func_CallBack(stCompressResult->eState, stCompressResult->nId,stCompressResult->nVal, stCompressResult->strOutInfo);
 		}
-		delete stPraseResult;
+		delete stCompressResult;
 	}
 }
 
-#if 0 //大纲目录 test
 
-// 	if (Init(m_strPdfPath, m_strPassword))
-// 	{
-// 
-// 		pdf_obj* root = pdf_dict_gets(pdf_trailer(doc), "Root");
-//		pdf_obj* obj = pdf_dict_gets(root, "Outlines");
-// 
-// 		if (pdf_is_indirect(obj))
-// 		{
-// 			int num = pdf_to_num(obj);
-// 			int gen = pdf_to_gen(obj);
-// 			pdf_delete_object(doc, num);
-// // 			pdf_obj* sub_obj = pdf_load_object(doc, num, gen);
-// // 			pdf_drop_obj(sub_obj);
-// // 			sub_obj = NULL;
-// 		}
-// 		pdf_obj* oa_obj = pdf_dict_gets(root, "OpenAction");
-// 		if (pdf_is_indirect(oa_obj))
-// 		{
-// 			int num = pdf_to_num(oa_obj);
-// 			int gen = pdf_to_gen(oa_obj);
-// 			pdf_delete_object(doc, num);
-// // 			pdf_obj* sub_obj2 = pdf_load_object(doc, num, gen);
-// // 			pdf_drop_obj(sub_obj2);
-// // 			sub_obj2 = NULL;
-// 		}
-// 		pdf_dict_dels(root, "Outlines");
-// 		pdf_dict_dels(root, "OpenAction");
-// 		pdf_dict_dels(root, "PageMode");
-// 		
-// 
-// 		ATL::CW2A szPdfOutPath(m_strPdfOutPath, CP_UTF8);
-// 		pdf_write_document(doc, (char*)szPdfOutPath, nullptr);
-// 		if (doc)
-// 		{
-// 			pdf_close_document(doc);
-// 			doc = NULL;
-// 			fz_free_context(ctx);
-// 			ctx = NULL;
-// 		}
-// 		//PraseResImage();
-// 	}
-// 	return 0;
+const char* CPdfCompressEx::GetClass()
+{
+	return "PdfCompressClass";
+}
 
-#endif
+void CPdfCompressEx::Run()
+{
+	while (m_bRun)
+	{
+		// 提取任务
+		m_CritSec.Lock();
+		if (m_TaskList.empty())
+		{
+			m_CritSec.Unlock();
+			Sleep(1);
+			continue;
+		}
 
-#if 0
-//if (Util::Path::IsFileExist(strTemp))
-//{
-//	ATL::CString strTemp2 = _T("E:\\test\\convert\\TempA.pdf");
-//	ATL::CW2A szPdfOutPath(strTemp2, CP_UTF8);
-//	pdf_write_document(doc, (char*)szPdfOutPath, nullptr);
-//	if (doc)
-//	{
-//		pdf_close_document(doc);
-//		doc = NULL;
-//		fz_free_context(ctx);
-//		ctx = NULL;
-//	}
-//	::DeleteFile(strTemp);
-//	::CopyFile(strTemp2, strTemp, false);
-//	::DeleteFile(strTemp2);
-//}
-//else
-//{
-//	ATL::CW2A szPdfOutPath(strTemp, CP_UTF8);
-//	pdf_write_document(doc, (char*)szPdfOutPath, nullptr);
-//	if (doc)
-//	{
-//		pdf_close_document(doc);
-//		doc = NULL;
-//		fz_free_context(ctx);
-//		ctx = NULL;
-//	}
-//}
+		auto it = m_TaskList.begin();
+		ST_PDFINFO_NODE itPdfInfoNode = *it;
+		m_TaskList.erase(it);
+		m_CritSec.Unlock();
+		
+		INT32	nId				= itPdfInfoNode.nId;
+		CString strPdfInPath	= itPdfInfoNode.strPdfInPath;
+		CString strPdfOutFolder = itPdfInfoNode.strPdfOutFolder;
 
-//if (uIndex == vecNum.size())
-//{
-//	::CopyFile(strTemp, m_strPdfOutPath, false);
-//}
+		CString strPdfOutPath = Util::Path::GetPDFOutPath(strPdfInPath, strPdfOutFolder);
+		if (DocumentInit(strPdfInPath, _T("")))
+		{
+			PraseImageTypeObj(nId,strPdfOutPath);
+		}
+		else
+		{
+			//通知该PDF文档初始化失败
+			JumpThreadSetProgress(nId, E_PDFCOMPRESS_STATE_FAIL, 0, _T("DocumentInit is Fail"));
+		}
+		Sleep(1);
+	}
+}
 
-#endif
+void CPdfCompressEx::ExistThread(bool bForce)
+{
+	bool bRet = false;
+	m_bRun = FALSE;
+	if (m_uThreadId)
+	{
+		Thread::IThreadManager* pThreadManager = NULL;
+		Thread::GetBaseThreadObject((void**)&pThreadManager);
+		if (NULL == pThreadManager)
+		{
+			ATLASSERT(FALSE);
+			return;
+		}
+		pThreadManager->ExistThread(m_uThreadId, bForce);
+	}
+}
+

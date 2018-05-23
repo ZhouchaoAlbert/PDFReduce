@@ -1,5 +1,5 @@
 #include "UtilMsg.h"
-#include "Singleton.h"
+#include "..\Base\Singleton.h"
 #include "MsgObjectMgr.h"
 Util::Msg::CMsgBase::CMsgBase()
 {

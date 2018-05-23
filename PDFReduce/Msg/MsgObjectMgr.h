@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __MSG_OBJECT_MGR_H__
+#define __MSG_OBJECT_MGR_H__
+
 #include "MsgObject.h"
 #include "UtilMsg.h"
 using namespace Util::Msg;
@@ -24,3 +26,5 @@ private:
 	map<CMsgBase*, CMsgObject*> m_mapMsgObject;
 };
 
+
+#endif

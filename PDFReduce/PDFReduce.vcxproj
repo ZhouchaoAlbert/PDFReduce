@@ -97,32 +97,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DropTarget\DropTargetReal.cpp" />
-    <ClCompile Include="GSWin32Parse.cpp" />
+    <ClCompile Include="Help\UtilImage.cpp" />
+    <ClCompile Include="Help\UtilPath.cpp" />
     <ClCompile Include="Msg\MsgObject.cpp" />
     <ClCompile Include="Msg\MsgObjectMgr.cpp" />
     <ClCompile Include="Msg\UtilMsg.cpp" />
-    <ClCompile Include="PdfCompress.cpp" />
-    <ClCompile Include="UtilImage.cpp" />
+    <ClCompile Include="PDFCompress\PdfCompressEx.cpp" />
+    <ClCompile Include="Thread\ThreadManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainFrame.cpp" />
-    <ClCompile Include="UtilMuPdf.cpp" />
-    <ClCompile Include="UtilPath.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DropTarget\DropTargetReal.h" />
-    <ClInclude Include="GSWin32Parse.h" />
+    <ClInclude Include="Base\BaseCom.h" />
+    <ClInclude Include="Base\SmartPointer.h" />
+    <ClInclude Include="Base\SmartRef.h" />
+    <ClInclude Include="Help\MyLock.h" />
+    <ClInclude Include="Help\UtilImage.h" />
+    <ClInclude Include="Help\UtilPath.h" />
     <ClInclude Include="Msg\MsgObject.h" />
     <ClInclude Include="Msg\MsgObjectMgr.h" />
     <ClInclude Include="Msg\UtilMsg.h" />
-    <ClInclude Include="MyLock.h" />
-    <ClInclude Include="PdfCompress.h" />
+    <ClInclude Include="PDFCompress\PdfCompressEx.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="UserDefine.h" />
-    <ClInclude Include="UtilImage.h" />
+    <ClInclude Include="Thread\ThreadManager.h" />
     <ClInclude Include="MainFrame.h" />
-    <ClInclude Include="UtilMuPdf.h" />
-    <ClInclude Include="UtilPath.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PDFReduce.rc" />
