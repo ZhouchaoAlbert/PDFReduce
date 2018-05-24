@@ -380,7 +380,7 @@ void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPa
 		}
 	}
 
-	E_PDFCOMPRESS_STATE eState = E_PDFCOMPRESS_STATE_NONE;
+	E_PDFCOMPRESS_STATE eState = E_PDFCOMPRESS_STATE_PERFECT;
 	static UINT32 uCurIndex = 1;
 	for (UINT32 uIndex = 0; uIndex < vecObjNum.size(); uIndex++)
 	{	
@@ -393,12 +393,12 @@ void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPa
 		{
 			if (IsWriteStream(uObjNum))
 			{
-				eState = E_PDFCOMPRESS_STATE_PERFECT;
+				eState = E_PDFCOMPRESS_STATE_TOSTREAM;
 				pdf_obj  *obj = NULL;
 				obj = pdf_load_object(m_doc, uObjNum, 0);
 				BOOL bRet = WriteDataToStream(obj, strDestImage, uObjNum);
 				pdf_drop_obj(obj);
-				if (bRet)
+				if (!bRet)
 				{
 					eState = E_PDFCOMPRESS_STATE_FAIL;
 					break;
@@ -454,11 +454,7 @@ BOOL  CPdfCompressEx::WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImag
 	fin.seekg(0, std::ios::beg);
 	fin.read((char*)szBuf, sizeof(char) * uSize);
 	fin.close();
-#if 0
-	UINT32 uDestLen = uSize;
-	UINT8* buffer_dest = new (std::nothrow)UINT8[uSize];
-	compress(buffer_dest, (uLong*)&uDestLen, szBuf, uSize);
-#endif
+
 
 	fz_buffer * stm_buf = nullptr;
 	fz_try(m_ctx)
@@ -472,9 +468,10 @@ BOOL  CPdfCompressEx::WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImag
 	{
 		UINT32 u = 0;
 		u = GetLastError();
+		delete[] szBuf;
+		return FALSE;
 	}
 	delete[] szBuf;
-
 #if 0
 	CStringA strTest;
 	for (UINT32 i = 0; i < uSize; i++)
