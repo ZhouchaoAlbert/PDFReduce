@@ -20,9 +20,8 @@ extern "C"
 
 struct ST_PDFINFO_NODE
 {
-	INT32   nId;						//唯一标示  id递增
-	CString strPdfInPath;				//输入PDF路径 
-	CString strPassword;
+	CString strPdfInPath;				//输入PDF路径   唯一标示
+	CString strPassword;                //输入密码
 	CString strPdfOutFolder;			//输出PDF文件夹
 };
 
@@ -37,11 +36,18 @@ enum E_PDFCOMPRESS_STATE
 struct ST_COMPRESS_RESULT
 {
 	CString					strPdfInPath;//唯一标示
-	E_PDFCOMPRESS_STATE     eState;		//压缩状态
-	INT32					nVal;		//进度值
-	CString					strOutInfo; //输出信息
+	E_PDFCOMPRESS_STATE     eState;		 //压缩状态
+	INT32					nVal;		 //进度值
+	CString					strOutInfo;  //输出信息
 };
 
+struct ST_LISTITEM_INFO
+{
+	CString					strPDFInPath;//输入路径 
+	CString					strPDFName;  //文件名
+	CString					strFileSize; //文件大小
+	CString					strState;    //文件状态
+};
 
 class CPdfCompressEx : public Util::Msg::CMsgBase, public Thread::IThreadCallback
 {
@@ -58,7 +64,6 @@ public:
 	void  SetProcessCallback(std::function<void(INT32 nCode, CString strPdfInPath, INT32 nVal, CString strOutInfo)>Func_CallBack);
 	//退出线程
 	void ExistThread(bool bForce);
-
 protected:
 	//初始化操作
 	BOOL DocumentInit(ATL::CString strPdfPath = _T(""), ATL::CString strPassword = _T(""));
@@ -86,7 +91,6 @@ protected:
 	//数据回写
 	BOOL WriteDataToStream(pdf_obj* dict, ATL::CString  strDestImagePath, INT32 nNum);
 
-
 	//消息
 	virtual void OnMessage(UINT32 uMsgID, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	// 获取类名称
@@ -102,12 +106,14 @@ private:
 	UINT32                                m_uThreadId;
 	std::list<ST_PDFINFO_NODE>		      m_TaskList;
 	CCritSec                              m_CritSec;
-	fz_context_s* m_ctx; 
-	pdf_document* m_doc; 
-
-
+	fz_context_s*						  m_ctx; 
+	pdf_document*                         m_doc; 
 
 	std::function<void(INT32 nCode, CString strPdfInPath, INT32 nVal, CString strOutInfo)>m_Func_CallBack;
 };
+
+
+//获取列表相关信息
+BOOL GetInitListItemInfo(CString strPDFInPath, ST_LISTITEM_INFO& itemList);
 
 #endif

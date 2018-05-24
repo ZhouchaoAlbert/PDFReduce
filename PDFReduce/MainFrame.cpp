@@ -234,13 +234,11 @@ void CMainFrame::StartPDFCompress()
 				return;
 			}
 
-
 			CLabelUI* pLabel = (CLabelUI*)pItem2->FindSubControl(_T("lab_state"));
-
 			if (E_PDFCOMPRESS_STATE_FINISH == nCode)
 			{
-				CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
-				if (pStartCompress)pStartCompress->SetTag(0);
+// 				CButtonUI* pStartCompress = static_cast<CButtonUI*>(m_PaintManager.FindControl(_T("btn_open_pdf_compress")));
+// 				if (pStartCompress)pStartCompress->SetTag(0);
 				CString strTest;
 				strTest.Format(_T("Ñ¹ËõÍê³É"));
 				pLabel->SetText(strTest);
@@ -266,10 +264,9 @@ void CMainFrame::StartPDFCompress()
 		});
 
 		ST_PDFINFO_NODE st;
-		st.nId				= uId;
 		st.strPdfInPath		= strPDFPath;
 		st.strPdfOutFolder	= strPDFOutFolder;
-
+		st.strPassword      = _T("");
 		Singleton<CPdfCompressEx>::Instance().AddTask(st);
 		Singleton<CPdfCompressEx>::Instance().StartCompress();
 	}
@@ -311,40 +308,11 @@ void CMainFrame::AddListItem(vector<CString> vecFileList)
 	for (UINT32 uIndex = 0; uIndex < vecFileList.size(); uIndex++)
 	{
 		CString strPDFPath(vecFileList[uIndex]);
-		if (0 == strPDFPath.Right(4).CompareNoCase(_T(".pdf")))
+		ST_LISTITEM_INFO itemList;
+		BOOL bRet = GetInitListItemInfo(strPDFPath, itemList);
+		if (bRet)
 		{
-			INT32 iStart = strPDFPath.ReverseFind(_T('\\'));
-			if (iStart < 0)
-			{
-				continue;
-			}
-			if (0 != strPDFPath.Right(4).CompareNoCase(_T(".pdf")))
-			{
-				continue;
-			}
-			CString strPdfFileName;
-			strPdfFileName = strPDFPath.Mid(iStart + 1, strPDFPath.GetLength() - iStart - 1);
-
-
-			HANDLE hFile = CreateFile(strPDFPath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-			if (hFile == INVALID_HANDLE_VALUE)
-				continue;
-			LARGE_INTEGER size;
-			BOOL bRet = GetFileSizeEx(hFile, &size);
-			if (!bRet)
-			{
-				continue;
-			}
-			UINT32 uSize = size.QuadPart;
-
-			ST_LISTITEM_INFO list;
-			list.strPDFPath = strPDFPath;
-			list.strPDFName = strPdfFileName;
-			CString strFileSize;
-			strFileSize.Format(_T("%dM"), uSize / 1024 / 1024);
-			list.strFileSize = strFileSize;
-			list.strState = _T("»¹Î´Ñ¹Ëõ");
-			CListContainerElementUI* pItem = GetListItem(list);
+			CListContainerElementUI* pItem = GetListItem(itemList);
 			if (pItem)
 			{
 				m_pFileList->Add(pItem);
@@ -458,26 +426,6 @@ LRESULT CMainFrame::OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	return S_OK;
 }
 
-
-HRESULT CMainFrame::OnDropEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
-{
-	return m_PaintManager.OnDropEnter(pDataObj, grfKeyState, pt, pdwEffect);
-}
-HRESULT CMainFrame::OnDropOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
-{
-	return m_PaintManager.OnDropOver(grfKeyState, pt, pdwEffect);
-}
-HRESULT CMainFrame::OnDropLeave()
-{
-	return m_PaintManager.OnDropLeave();
-}
-HRESULT CMainFrame::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
-{
-	return m_PaintManager.OnDrop(pDataObj, grfKeyState, pt, pdwEffect);
-}
-
-
-
 CListContainerElementUI* CMainFrame::GetListItem(ST_LISTITEM_INFO item)
 {
 	CListContainerElementUI* pItem = new CListContainerElementUI;
@@ -487,7 +435,7 @@ CListContainerElementUI* CMainFrame::GetListItem(ST_LISTITEM_INFO item)
 
 	CControlUI* pNode = new CControlUI();
 	if (pNode){
-		pNode->SetText(item.strPDFPath);
+		pNode->SetText(item.strPDFInPath);
 	}
 	pItem->SetTag((UINT_PTR)pNode);
 
@@ -555,8 +503,5 @@ CListContainerElementUI* CMainFrame::GetListItem(ST_LISTITEM_INFO item)
 		pHorFileState->SetFixedWidth(150);
 		pItem->Add(pHorFileState);
 	}
-
-
-
 	return pItem;
 }

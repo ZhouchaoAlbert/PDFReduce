@@ -200,6 +200,11 @@ UINT8* Util::Image::AssembleBitmap(UINT8* bmpData,UINT32 uLen, INT32 width, INT3
 			bool is_grayscale = true;
 			for (INT32 y = 0; y < height; y++)
 			{
+				if (y * stride > uLen)
+				{
+					ATLASSERT(FALSE);
+					return nullptr;
+				}
 				UINT8 *in = bmpData + y * stride;
 				UINT8 green = 0, blue = 0;
 				for (INT32 x = 0; x < width; x++)

@@ -50,7 +50,7 @@
 						<Control height="10" />
 					
 						<HorizontalLayout name="hor_file_list" visible="false"  padding="10,0,10,0"  bordercolor="#FF999999" bordersize="1" > 
-							<List name="file_list"  vscrollbar="true" hscrollbar="true" itembkcolor="#FFFFFFFF" itemselectedtextcolor="#FFFFFFFF" itemselectedbkcolor="#FFebebeb" itemhotbkcolor="#FFF2F2F2" >
+							<List name="file_list"  vscrollbar="true" hscrollbar="true" inset="5,5,5,5" itembkcolor="#FFFFFFFF" itemselectedtextcolor="#FFFFFFFF" itemselectedbkcolor="#FFebebeb" itemhotbkcolor="#FFF2F2F2" >
 								<ListHeader height="40" menu="true" bottombordersize="2" bordercolor="#FFe6e6e6">
 									<ListHeaderItem text="文件名"  width="150" align="left"  dragable="false" />
 									<Control width="1" bkcolor="#FFD7D7D7"/>

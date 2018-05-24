@@ -404,7 +404,7 @@ void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPa
 
 		//跳线程设置进度
 		CString strOutInfo;
-		strOutInfo.Format(_T("Prase image obj:%d"), uObjNum);
+		strOutInfo.Format(_T("Prase image obj:%u"), uObjNum);
 		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_PRASE, 100 * (uCurIndex++) / vecObjNum.size(), strOutInfo);
 	}
 
@@ -599,3 +599,57 @@ void CPdfCompressEx::ExistThread(bool bForce)
 	}
 }
 
+#define MY_KB 1024
+#define MY_MB (1024*MY_KB)
+#define MY_GB (1024*MY_MB)
+
+BOOL GetInitListItemInfo(CString strPDFInPath, ST_LISTITEM_INFO& itemList)
+{
+	if (0 != strPDFInPath.Right(4).CompareNoCase(_T(".pdf")))
+	{
+		return FALSE;
+	}
+	INT32 iStart = strPDFInPath.ReverseFind(_T('\\'));
+	if (iStart < 0)
+	{
+		return FALSE;
+	}
+	if (0 != strPDFInPath.Right(4).CompareNoCase(_T(".pdf")))
+	{
+		return FALSE;
+	}
+	CString strPdfFileName;
+	strPdfFileName = strPDFInPath.Mid(iStart + 1, strPDFInPath.GetLength() - iStart - 1);
+
+
+	HANDLE hFile = CreateFile(strPDFInPath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return FALSE;
+	LARGE_INTEGER size;
+	BOOL bRet = GetFileSizeEx(hFile, &size);
+	if (!bRet){
+		return FALSE;
+	}
+	UINT32 uSize = size.QuadPart;
+
+	CString strFileSize;
+	if (uSize > MY_GB){
+		strFileSize.Format(_T("%0.2fGB"), (double)uSize / MY_GB);
+	}
+	else if (uSize > MY_MB){
+		strFileSize.Format(_T("%0.2fMB"), (double)uSize / MY_MB);
+	}
+	else if (uSize > MY_KB){
+		int n = uSize / MY_KB;
+		strFileSize.Format(_T("%0.2fKB"), (double)uSize / MY_KB);
+	}
+	else{
+		strFileSize.Format(_T("%dByte"), uSize);
+	}
+
+	itemList.strPDFName		= strPdfFileName;
+	itemList.strPDFInPath	= strPDFInPath;
+	itemList.strFileSize	= strFileSize;
+	itemList.strState		= _T("还未压缩");
+	return TRUE;
+}

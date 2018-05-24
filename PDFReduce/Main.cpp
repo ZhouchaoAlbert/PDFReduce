@@ -1,6 +1,6 @@
 #include <atlstr.h>
 #include "UIlib.h"
-#include "UtilPath.h"
+#include "Help/UtilPath.h"
 #include "MainFrame.h"
 using namespace DuiLib;
 
