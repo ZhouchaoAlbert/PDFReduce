@@ -380,7 +380,7 @@ void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPa
 		}
 	}
 
-	BOOL bPerfectPDF = TRUE;
+	E_PDFCOMPRESS_STATE eState = E_PDFCOMPRESS_STATE_NONE;
 	static UINT32 uCurIndex = 1;
 	for (UINT32 uIndex = 0; uIndex < vecObjNum.size(); uIndex++)
 	{	
@@ -393,11 +393,16 @@ void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPa
 		{
 			if (IsWriteStream(uObjNum))
 			{
-				bPerfectPDF = FALSE;
+				eState = E_PDFCOMPRESS_STATE_PERFECT;
 				pdf_obj  *obj = NULL;
 				obj = pdf_load_object(m_doc, uObjNum, 0);
 				WriteDataToStream(obj, strDestImage, uObjNum);
 				pdf_drop_obj(obj);
+			}
+			else
+			{
+				eState = E_PDFCOMPRESS_STATE_FAIL;
+				break;
 			}
 		}
 		DeleteFile(strDestImage);
@@ -408,21 +413,21 @@ void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPa
 		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_PRASE, 100 * (uCurIndex++) / vecObjNum.size(), strOutInfo);
 	}
 
-	if (bPerfectPDF)
+	if (E_PDFCOMPRESS_STATE_PERFECT == eState)
 	{
-		CString strOutInfo;
-		strOutInfo.Format(_T("Perfect PDF£¡Not Need Prase!"));
-		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_PERFECT, 0, strOutInfo);
+		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_PERFECT, 0, _T("Perfect PDF£¡Not Need Prase!"));
 	}
-	else
+	else if (E_PDFCOMPRESS_STATE_FAIL == eState)
+	{
+		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_FAIL, 0, _T("Image to Stream Fail!"));
+	}
+	else 
 	{
 		fz_write_options ops = { 0 };
 		ATL::CW2A szPdfOutPath(strPdfOutPath, CP_UTF8);
 		pdf_write_document(m_doc, (char*)szPdfOutPath, &ops);
 
-		CString strOutInfo;
-		strOutInfo.Format(_T("Prase Sucess!"));
-		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_FINISH, 100, strOutInfo);
+		JumpThreadSetProgress(strPdfInPath, E_PDFCOMPRESS_STATE_FINISH, 100, _T("Prase Sucess!"));
 	}
 	if (m_doc){
 		pdf_close_document(m_doc);
