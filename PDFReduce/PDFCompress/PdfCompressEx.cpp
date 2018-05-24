@@ -396,14 +396,14 @@ void CPdfCompressEx::PraseImageTypeObj(CString strPdfInPath, CString strPdfOutPa
 				eState = E_PDFCOMPRESS_STATE_PERFECT;
 				pdf_obj  *obj = NULL;
 				obj = pdf_load_object(m_doc, uObjNum, 0);
-				WriteDataToStream(obj, strDestImage, uObjNum);
+				BOOL bRet = WriteDataToStream(obj, strDestImage, uObjNum);
 				pdf_drop_obj(obj);
-			}
-			else
-			{
-				eState = E_PDFCOMPRESS_STATE_FAIL;
-				break;
-			}
+				if (bRet)
+				{
+					eState = E_PDFCOMPRESS_STATE_FAIL;
+					break;
+				}
+			}	
 		}
 		DeleteFile(strDestImage);
 
@@ -604,12 +604,13 @@ void CPdfCompressEx::ExistThread(bool bForce)
 	}
 }
 
+
+BOOL GetInitListItemInfo(CString strPDFInPath, ST_LISTITEM_INFO& itemList)
+{
 #define MY_KB 1024
 #define MY_MB (1024*MY_KB)
 #define MY_GB (1024*MY_MB)
 
-BOOL GetInitListItemInfo(CString strPDFInPath, ST_LISTITEM_INFO& itemList)
-{
 	if (0 != strPDFInPath.Right(4).CompareNoCase(_T(".pdf")))
 	{
 		return FALSE;
@@ -636,6 +637,9 @@ BOOL GetInitListItemInfo(CString strPDFInPath, ST_LISTITEM_INFO& itemList)
 		return FALSE;
 	}
 	UINT32 uSize = size.QuadPart;
+	if (uSize <= 0){
+		return FALSE;
+	}
 
 	CString strFileSize;
 	if (uSize > MY_GB){
